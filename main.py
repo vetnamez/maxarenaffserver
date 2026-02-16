@@ -72,11 +72,6 @@ def health_check():
 if __name__ == '__main__':
     cert_path = 'cert.pem'
     key_path = 'key.pem'
-    #    if os.path.exists(cert_path) and os.path.exists(key_path):
     context = (cert_path, key_path)
-    #    app.run(host='0.0.0.0', port=17000, ssl_context=context, debug=True)
-    # else:
-    #     logger.warning('SSL certificates not found. Running without HTTPS!')
-    #    app.run(host='0.0.0.0', port=8080, debug=True)
     logger.info(f"Запуск webhook сервера на {config.HOST}:{config.PORT}")
     app.run(host=config.HOST, port=config.PORT,ssl_context=context, debug=False)
