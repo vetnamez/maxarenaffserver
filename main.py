@@ -83,7 +83,7 @@ def webhook():
         # Пытаемся получить chat_id из новой структуры (recipient.chat_id)
 
         if chat_id:
-            save_message_to_log(chat_id, data)
+            save_message_to_log(chat_id, message)
         else:
             logger.warning("Chat ID not found in request, skipping log file save.")
 
