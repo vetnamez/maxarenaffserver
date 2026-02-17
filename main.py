@@ -27,7 +27,7 @@ def get_response_text(filename, default_text):
     """Читает текст ответа из файла. Если файла нет, возвращает default_text."""
     try:
         if os.path.exists(filename):
-            with open(filename, 'r', encoding='utf-8') as f:
+            with open(filename, 'r', encoding='cp1251') as f:
                 return f.read().strip()
     except Exception as e:
         logger.error(f"Error reading file {filename}: {e}")
@@ -44,7 +44,7 @@ def save_message_to_log(chat_id, data):
         file_path = os.path.join(LOGS_DIR, f"{safe_chat_id}.txt")
 
         # Записываем JSON в файл с новой строки (режим добавления)
-        with open(file_path, 'a', encoding='utf-8') as f:
+        with open(file_path, 'a', encoding='cp1251') as f:
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
 
     except Exception as e:
@@ -72,34 +72,21 @@ def webhook():
             return jsonify({"error": "Request must be JSON"}), 400
 
         data = request.get_json()
+        message = data.get('message', {})
+        chat_id = message.get('recipient', {}).get('chat_id')
+        text = message.get('body', {}).get('text', '')
+        sender = message.get('sender', {}).get('name', 'Пользователь')
+        update_type = data.get('update_type')
         logger.info(f'Received update: {data}')
 
         # 1. Сохраняем входящее сообщение в файл
         # Пытаемся получить chat_id из новой структуры (recipient.chat_id)
-        chat_id = None
-        if 'recipient' in data and 'chat_id' in data['recipient']:
-            chat_id = data['recipient']['chat_id']
-        elif 'user_id' in data:  # Фоллбэк на старую структуру
-            chat_id = data['user_id']
 
         if chat_id:
             save_message_to_log(chat_id, data)
         else:
             logger.warning("Chat ID not found in request, skipping log file save.")
 
-        # 2. Логика формирования ответа
-        update_type = data.get("update_type", "message_created")
-
-        # Извлекаем текст сообщения (адаптировано под вашу структуру body)
-        text = ""
-        if 'body' in data:
-            # Если body это объект, пробуем взять текст из него, иначе приводим к строке
-            if isinstance(data['body'], dict):
-                text = data['body'].get('text', '')
-            else:
-                text = str(data['body'])
-        elif 'text' in data:
-            text = data.get('text', '')
 
         # Выбираем текст ответа в зависимости от типа события, читая из файлов
         if update_type == "bot_started":
@@ -107,8 +94,8 @@ def webhook():
         elif update_type == "message_created":
             # Можно использовать один файл response.txt для всех сообщений
             # Или шаблон, где {user_text} будет заменен
-            template = get_response_text('response.txt', "Вы сказали: {text}")
-            resp_text = template.format(text=text)
+            template = get_response_text('response.txt', "Вы сказали: {message}")
+            resp_text = template.format(text=message)
         else:
             resp_text = get_response_text('default.txt', "Неизвестный тип события.")
 
