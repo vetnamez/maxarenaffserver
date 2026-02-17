@@ -77,13 +77,19 @@ def webhook():
         text = message.get('body', {}).get('text', '')
         sender = message.get('sender', {}).get('name', 'Пользователь')
         update_type = data.get('update_type')
+        message_text = message.get('body', {}).get('text')
         logger.info(f'Received update: {data}')
-
+        logger.info(f"=== Входящее сообщение ===")
+        logger.info(f"Тип: {data.get('update_type')}")
+        logger.info(f"Чат ID: {message.get('recipient', {}).get('chat_id')}")
+        logger.info(f"От: {message.get('sender', {}).get('name')}")
+        logger.info(f"Текст: '{message.get('body', {}).get('text')}'")
+        logger.info(f"Время: {data.get('timestamp')}")
         # 1. Сохраняем входящее сообщение в файл
         # Пытаемся получить chat_id из новой структуры (recipient.chat_id)
 
         if chat_id:
-            save_message_to_log(chat_id, message)
+            save_message_to_log(chat_id, message_text)
         else:
             logger.warning("Chat ID not found in request, skipping log file save.")
 
@@ -94,8 +100,8 @@ def webhook():
         elif update_type == "message_created":
             # Можно использовать один файл response.txt для всех сообщений
             # Или шаблон, где {user_text} будет заменен
-            template = get_response_text('response.txt', "Вы сказали: {message}")
-            resp_text = template.format(text=message)
+            template = get_response_text('response.txt', "Вы сказали: {message_text}")
+            resp_text = template.format(text=message_text)
         else:
             resp_text = get_response_text('default.txt', "Неизвестный тип события.")
 
