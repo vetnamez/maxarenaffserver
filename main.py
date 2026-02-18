@@ -106,7 +106,7 @@ def webhook():
             # Или шаблон, где {user_text} будет заменен
             #template = get_response_text('response.txt', "Вы сказали: {message_text}")
             #resp_text = template.format(text=message_text)
-            resp_text = "Вы сказали:" + message_text+ ', ' + "ваш chat_id:"+chat_id
+            resp_text = "Вы сказали: " + str(message_text) + ', ' + "ваш chat_id: "+str(chat_id)
         else:
             resp_text = get_response_text('default.txt', "Неизвестный тип события.")
 
