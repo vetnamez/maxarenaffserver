@@ -34,21 +34,21 @@ def get_response_text(filename, default_text):
     return default_text
 
 
-def save_message_to_log(chat_id, data):
+def save_message_to_log(filename, data):
     """Сохраняет входящее сообщение в файл с именем chat_id."""
     try:
         if not os.path.exists(LOGS_DIR):
             os.makedirs(LOGS_DIR)
 
-        safe_chat_id = sanitize_filename(chat_id)
-        file_path = os.path.join(LOGS_DIR, f"{safe_chat_id}.txt")
+        safe_filename = sanitize_filename(filename)
+        file_path = os.path.join(LOGS_DIR, f"{safe_filename}.txt")
 
         # Записываем JSON в файл с новой строки (режим добавления)
         with open(file_path, 'a', encoding='cp1251') as f:
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
 
     except Exception as e:
-        logger.exception(f"Error saving log for chat {chat_id}: {e}")
+        logger.exception(f"Error saving log for chat {filename}: {e}")
 
 
 @app.route('/webhook', methods=['GET', 'POST'])
@@ -78,20 +78,24 @@ def webhook():
         sender = message.get('sender', {}).get('name', 'Пользователь')
         update_type = data.get('update_type')
         message_text = message.get('body', {}).get('text')
+        message_id = message.get('body', {}).get('mid')
+        message_time = data.get('timestamp')
+        message_sendername = message.get('sender', {}).get('name')
         logger.info(f'Received update: {data}')
         logger.info(f"=== Входящее сообщение ===")
         logger.info(f"Тип: {data.get('update_type')}")
-        logger.info(f"Чат ID: {message.get('recipient', {}).get('chat_id')}")
-        logger.info(f"От: {message.get('sender', {}).get('name')}")
-        logger.info(f"Текст: '{message.get('body', {}).get('text')}'")
-        logger.info(f"Время: {data.get('timestamp')}")
+        logger.info(f"Чат ID: {chat_id}")
+        logger.info(f"От: {message_sendername}")
+        logger.info(f"Текст: '{message_text}'")
+        logger.info(f"mid: '{message_id}'")
+        logger.info(f"Время: {message_time}")
         # 1. Сохраняем входящее сообщение в файл
         # Пытаемся получить chat_id из новой структуры (recipient.chat_id)
 
-        if chat_id:
-            save_message_to_log(chat_id, message_text)
+        if message_id:
+            save_message_to_log(message_id, message)
         else:
-            logger.warning("Chat ID not found in request, skipping log file save.")
+            logger.warning("mID not found in request, skipping log file save.")
 
 
         # Выбираем текст ответа в зависимости от типа события, читая из файлов
