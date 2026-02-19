@@ -190,7 +190,7 @@ def webhook():
             resp_text = get_response_text('welcome.txt', "👋 Добро пожаловать!")
         elif update_type == "message_created":
             # Простой шаблон - в реальности здесь должна быть отправка в очередь
-            resp_text = f"✅ Получено: {text[:200]}"
+            resp_text = f"✅ Получено: {text}, ℹ️ chat_id: {chat_id}"
         else:
             resp_text = get_response_text('default.txt', "🤔")
 
