@@ -144,9 +144,9 @@ def webhook():
     # === 1. Проверка подписи (БЕЗОПАСНОСТЬ) ===
     if config.SECRET_KEY:
         signature = request.headers.get('X-Hub-Signature-256') or request.headers.get('X-Hub-Signature')
-        if not verify_signature(request.data, signature, config.SECRET_KEY):
-            logger.warning(f"Invalid signature from {request.remote_addr}")
-            return jsonify({"error": "Forbidden"}), 403
+        #if not verify_signature(request.data, signature, config.SECRET_KEY):
+           # logger.warning(f"Invalid signature from {request.remote_addr}")
+          #  return jsonify({"error": "Forbidden"}), 403
 
     # === 2. Валидация входных данных ===
     if not request.is_json:
