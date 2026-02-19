@@ -177,7 +177,7 @@ def webhook():
 
         # Сохраняем в файл (асинхронно в идеале, но пока синхронно)
         if message_id:
-            save_message_to_log(message_id, data)
+            save_message_to_log(message_id, message)
 
     except Exception as e:
         logger.exception("Error during logging phase:"+ str(e))
