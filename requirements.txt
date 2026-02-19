@@ -1,2 +1,4 @@
-flask
 requests
+flask>=2.3.0
+waitress>=2.1.0
+werkzeug>=2.3.0

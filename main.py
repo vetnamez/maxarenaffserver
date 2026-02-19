@@ -1,18 +1,66 @@
 from flask import Flask, request, jsonify
+from waitress import serve
+from werkzeug.middleware.proxy_fix import ProxyFix
 import logging
+import logging.handlers
 import config
 import os
 import json
 import re
+import hmac
+import hashlib
+import time
+from datetime import datetime
+
+# ==================== НАСТРОЙКА ЛОГИРОВАНИЯ ====================
+# Создаем папку для логов
+LOG_DIR = 'logs'
+os.makedirs(LOG_DIR, exist_ok=True)
+
+# Ротация логов: 10 файлов по 5 МБ каждый
+file_handler = logging.handlers.RotatingFileHandler(
+    os.path.join(LOG_DIR, 'app.log'),
+    maxBytes=5 * 1024 * 1024,
+    backupCount=10,
+    encoding='utf-8'
+)
+file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+))
+
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+
+logging.basicConfig(
+    level=logging.INFO,
+    handlers=[file_handler, console_handler]
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# Настройка логирования
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# ==================== ПРОКСИ-НАСТРОЙКИ (для Nginx) ====================
+# Доверяем заголовкам от обратного прокси
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1, x_prefix=1)
 
-# Папка для хранения логов переписки
+# ==================== КОНФИГУРАЦИЯ ====================
 LOGS_DIR = 'chat_logs'
+#os.makedirs(LOGS_DIR, exist_ok=True)
+
+# Простой in-memory кэш для идемпотентности (в продакшене лучше Redis!)
+# Формат: {message_id: timestamp}
+_processed_messages = {}
+IDEMPOTENCY_TTL = 3600  # секунд
+
+
+def cleanup_old_ids():
+    """Удаляет старые записи из кэша идемпотентности."""
+    now = time.time()
+    old_ids = [mid for mid, ts in _processed_messages.items() if now - ts > IDEMPOTENCY_TTL]
+    for mid in old_ids:
+        del _processed_messages[mid]
+    if old_ids:
+        logger.debug(f"Cleaned up {len(old_ids)} old message IDs")
 
 
 def sanitize_filename(name):
@@ -21,6 +69,18 @@ def sanitize_filename(name):
         return "unknown"
     # Разрешаем только цифры, буквы, дефис и подчеркивание
     return re.sub(r'[^\w\-]', '', str(name))
+
+
+
+def is_message_processed(message_id):
+    """Проверяет, обрабатывалось ли уже это сообщение (идемпотентность)."""
+    if not message_id:
+        return False
+    cleanup_old_ids()
+    if message_id in _processed_messages:
+        return True
+    _processed_messages[message_id] = time.time()
+    return False
 
 
 def get_response_text(filename, default_text):
@@ -41,82 +101,105 @@ def save_message_to_log(filename, data):
             os.makedirs(LOGS_DIR)
 
         safe_filename = sanitize_filename(filename)
-        file_path = os.path.join(LOGS_DIR, f"{safe_filename}.txt")
+        file_path = os.path.join(LOGS_DIR, f"{safe_filename}.txt")  # .jsonl - стандарт для логов
 
-        # Записываем JSON в файл с новой строки (режим добавления)
         with open(file_path, 'a', encoding='cp1251') as f:
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
 
     except Exception as e:
-        logger.exception(f"Error saving log for chat {filename}: {e}")
+        logger.exception(f"Error saving log for {filename}: {e}")
 
+
+def verify_signature(payload, header_signature, secret):
+    """
+    Проверяет HMAC-подпись вебхука.
+    Возвращает True, если подпись верна.
+    """
+    if not secret or not header_signature:
+        return False
+
+    # Ожидаем формат: sha256=hexdigest или просто hexdigest
+    if '=' in header_signature:
+        header_signature = header_signature.split('=')[1]
+
+    expected = hmac.new(
+        secret.encode('utf-8'),
+        payload,
+        hashlib.sha256
+    ).hexdigest()
+
+    return hmac.compare_digest(expected, header_signature)
+
+
+# ==================== ВЕБХУК ЛОГИКА ====================
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
     """Основной webhook endpoint для MaxBot."""
 
+    # GET - health check для балансировщика
     if request.method == 'GET':
-        return jsonify({
-            "status": "Webhook is active",
-            "message": "Send POST requests to interact with the bot"
-        }), 200
+        return jsonify({"status": "webhook_active"}), 200
 
-    # Проверяем секрет (если используется)
-    received_secret = request.headers.get("X-Hub-Signature")
-    if hasattr(config, 'SECRET_KEY') and config.SECRET_KEY and received_secret and received_secret != config.SECRET_KEY:
-        logger.warning("Invalid secret received!")
-        return jsonify({"error": "Invalid secret"}), 403
+    # === 1. Проверка подписи (БЕЗОПАСНОСТЬ) ===
+    if config.SECRET_KEY:
+        signature = request.headers.get('X-Hub-Signature-256') or request.headers.get('X-Hub-Signature')
+        if not verify_signature(request.data, signature, config.SECRET_KEY):
+            logger.warning(f"Invalid signature from {request.remote_addr}")
+            return jsonify({"error": "Forbidden"}), 403
+
+    # === 2. Валидация входных данных ===
+    if not request.is_json:
+        logger.warning("Received non-JSON request")
+        return jsonify({"error": "Content-Type must be application/json"}), 400
 
     try:
-        if not request.is_json:
-            return jsonify({"error": "Request must be JSON"}), 400
-
         data = request.get_json()
+    except Exception as e:
+        logger.error(f"Failed to parse JSON: {e}")
+        return jsonify({"error": "Invalid JSON"}), 400
+
+    # === 3. Идемпотентность (защита от дублей) ===
+    message_id = data.get('message', {}).get('body', {}).get('mid')
+    if message_id and is_message_processed(message_id):
+        logger.info(f"Duplicate message {message_id}, skipping")
+        return jsonify({"status": "duplicate_ignored"}), 200  # 200, чтобы отправитель не повторял
+
+    # === 4. Быстрое логирование (минимум времени) ===
+    try:
         message = data.get('message', {})
         chat_id = message.get('recipient', {}).get('chat_id')
+        sender = message.get('sender', {}).get('name', 'Unknown')
         text = message.get('body', {}).get('text', '')
-        sender = message.get('sender', {}).get('name', 'Пользователь')
         update_type = data.get('update_type')
-        message_text = message.get('body', {}).get('text')
-        message_id = message.get('body', {}).get('mid')
-        message_time = data.get('timestamp')
-        message_sendername = message.get('sender', {}).get('name')
-        logger.info(f'Received update: {data}')
-        logger.info(f"=== Входящее сообщение ===")
-        logger.info(f"Тип: {data.get('update_type')}")
-        logger.info(f"Чат ID: {chat_id}")
-        logger.info(f"От: {message_sendername}")
-        logger.info(f"Текст: '{message_text}'")
-        logger.info(f"mid: '{message_id}'")
-        logger.info(f"Время: {message_time}")
-        # 1. Сохраняем входящее сообщение в файл
-        # Пытаемся получить chat_id из новой структуры (recipient.chat_id)
 
+        logger.info(f"Webhook [{update_type}] from {sender} (chat:{chat_id}): '{text[:100]}...'")
+
+        # Сохраняем в файл (асинхронно в идеале, но пока синхронно)
         if message_id:
-            save_message_to_log(message_id, message)
-        else:
-            logger.warning("mID not found in request, skipping log file save.")
+            save_message_to_log(message_id, data)
 
+    except Exception as e:
+        logger.exception("Error during logging phase:"+ str(e))
+        # Не прерываем обработку, если упало логирование
 
-        # Выбираем текст ответа в зависимости от типа события, читая из файлов
+    # === 5. Формирование ответа (БЫСТРО!) ===
+    # Вся тяжелая логика должна быть вынесена в очередь задач!
+    try:
         if update_type == "bot_started":
-            resp_text = get_response_text('welcome.txt', "Добро пожаловать! (файл welcome.txt не найден)")
+            resp_text = get_response_text('welcome.txt', "👋 Добро пожаловать!")
         elif update_type == "message_created":
-            # Можно использовать один файл response.txt для всех сообщений
-            # Или шаблон, где {user_text} будет заменен
-            #template = get_response_text('response.txt', "Вы сказали: {message_text}")
-            #resp_text = template.format(text=message_text)
-            resp_text = "Вы сказали: " + str(message_text) + ', ' + "ваш chat_id: "+str(chat_id)
+            # Простой шаблон - в реальности здесь должна быть отправка в очередь
+            resp_text = f"✅ Получено: {text[:200]}"
         else:
-            resp_text = get_response_text('default.txt', "Неизвестный тип события.")
+            resp_text = get_response_text('default.txt', "🤔")
 
-        # Формирование ответа
         response = {
             "text": resp_text,
             "reply_markup": {
                 "keyboard": [
-                    [{"text": "Повторить"}, {"text": "Стоп"}],
-                    [{"text": "Помощь"}, {"text": "Инфо"}]
+                    [{"text": "🔄 Повторить"}, {"text": "⏹ Стоп"}],
+                    [{"text": "❓ Помощь"}, {"text": "ℹ️ Инфо"}]
                 ],
                 "resize_keyboard": True,
                 "one_time_keyboard": False
@@ -125,31 +208,50 @@ def webhook():
         return jsonify(response), 200
 
     except Exception as e:
-        logger.exception('Error processing webhook: ' + str(e))
-        return jsonify({"error": "Internal server error"}), 500
+        logger.exception("Error generating response")
+        # Возвращаем минимальный ответ, чтобы не ломать протокол
+        return jsonify({"text": "⚠️ Произошла ошибка, попробуйте позже"}), 200
 
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    """Проверка работоспособности приложения."""
-    return jsonify({"status": "healthy"}), 200
+    """Эндпоинт для проверки работоспособности (для Nginx/мониторинга)."""
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "processed_cache_size": len(_processed_messages)
+    }), 200
+
+
+# ==================== ЗАПУСК ====================
+
+def run_production():
+    """Запуск через Waitress для продакшена."""
+    host = config.HOST  # Только localhost! SSL терминирует Nginx
+    port = config.PORT
+    threads = config.WAITRESS_THREADS
+
+    logger.info(f"Starting Waitress server on {host}:{port} with {threads} threads")
+    logger.info("⚠️  SSL should be handled by Nginx reverse proxy")
+
+    # Waitress не поддерживает SSL напрямую - используем HTTP за Nginx
+    serve(
+        app,
+        host=host,
+        port=port,
+        threads=threads,
+        channel_timeout=30,  # Таймаут канала (сек)
+        connection_limit=100,  # Макс соединений
+        recv_bytes=10485760,  # Макс размер тела запроса (10 MB)
+    )
 
 
 if __name__ == '__main__':
-    cert_path = 'cert.pem'
-    key_path = 'key.pem'
+    # Для отладки можно запускать напрямую, но в продакшене - только через run_production()
+    import sys
 
-    # Проверка наличия сертификатов перед запуском
-    if os.path.exists(cert_path) and os.path.exists(key_path):
-        context = (cert_path, key_path)
+    if len(sys.argv) > 1 and sys.argv[1] == '--dev':
+        logger.warning("⚠️  Running in DEVELOPMENT mode with app.run()")
+        app.run(host='0.0.0.0', port=80, debug=True)
     else:
-        logger.warning("SSL certificates not found. Running without SSL (not recommended for production).")
-        context = None
-
-    logger.info(f"Запуск webhook сервера на {config.HOST}:{config.PORT}")
-
-    # Если context=None, ssl_context не передаем
-    if context:
-        app.run(host=config.HOST, port=config.PORT, ssl_context=context, debug=False)
-    else:
-        app.run(host=config.HOST, port=config.PORT, debug=False)
+        run_production()
