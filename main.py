@@ -233,7 +233,9 @@ def webhook():
             }
 
         elif update_type == "message_callback":
-            pass
+            response = {
+                "text": data,
+            }
 
         else:
             resp_text = get_response_text('default.txt', "🤔")
