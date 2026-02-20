@@ -236,6 +236,7 @@ def webhook():
             response = {
                 "text": data,
             }
+            print(data)
 
         else:
             resp_text = get_response_text('default.txt', "🤔")
