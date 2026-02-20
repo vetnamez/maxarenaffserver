@@ -137,6 +137,23 @@ def create_message_from_json(json_file):
     return payload
 
 # ==================== ВЕБХУК ЛОГИКА ====================
+def handle_callback(data: dict):
+    """Обрабатывает нажатие на кнопку."""
+    body = data.get("body", {})
+    sender = data.get("sender", {})
+
+    # Текст нажатой кнопки (payload)
+    callback_text = body.get("text", "")
+
+    # Логика по городам
+    if callback_text == "CITY_TGN":
+        print(f"🏙 Пользователь {sender.get('user_id')} выбрал Таганрог")
+    elif callback_text == "CITY_ARM":
+        print(f"🏙 Пользователь {sender.get('user_id')} выбрал Армавир")
+    elif callback_text == "CITY_KZN":
+        print(f"🏙 Пользователь {sender.get('user_id')} выбрал Казань")
+    else:
+        print(f"❓ Неизвестный выбор: {callback_text}")
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
@@ -193,41 +210,47 @@ def webhook():
     try:
         if update_type == "bot_started":
             response = {
-                "text": "Добро пожаловать! Пожалуйста, выберите город:",
-                "attachments": [
-                    {
-                        "type": "inline_keyboard",
-                        "payload": {
-                            "buttons": [
-                                [
-                                    [
-                                    {
-                                        "type": "callback",
-                                        "text": "Таганрог",
-                                        "payload": "CITY_TGN"
-                                    }],
-                                    [{
-                                        "type": "callback",
-                                        "text": "Армавир",
-                                        "payload": "CITY_ARM"
-                                    }],
-                                    [{
-                                        "type": "callback",
-                                        "text": "Казань",
-                                        "payload": "CITY_KZN"
-                                    }]
-                                ]
-                            ]
-                        }
-                    }
-                ]
+  "text": "Добро пожаловать! Пожалуйста, выберите город:",
+  "attachments": [
+    {
+      "type": "inline_keyboard",
+      "payload": {
+        "buttons": [
+          [
+            {
+              "type": "callback",
+              "text": "Таганрог",
+              "payload": "CITY_TGN"
             }
+          ],
+          [
+            {
+              "type": "callback",
+              "text": "Армавир",
+              "payload": "CITY_ARM"
+            }
+          ],
+          [
+            {
+              "type": "callback",
+              "text": "Казань",
+              "payload": "CITY_KZN"
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}
         elif update_type == "message_created":
             # Простой шаблон - в реальности здесь должна быть отправка в очередь
             resp_text = f"✅ Получено: {text}, ℹ️ chat_id: {chat_id}"
             response = {
                 "text": resp_text,
             }
+
+        elif update_type == "message_callback":
+            handle_callback(data)
 
         else:
             resp_text = get_response_text('default.txt', "🤔")
