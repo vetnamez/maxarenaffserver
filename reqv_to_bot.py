@@ -17,7 +17,7 @@ def load_payload(filepath: str) -> dict:
 
 
 
-def send_message(user_id: str, token: str, payload: dict) -> requests.Response:
+def send_message(user_id: str, payload: dict, token: str) -> requests.Response:
     """Отправляет сообщение в бота."""
     url = f"{config.API_BASE_URL}messages?user_id={user_id}"
     headers = {

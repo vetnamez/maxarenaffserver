@@ -260,7 +260,7 @@ def webhook():
                 "text": resp_text,
             }
             reqv.delete_message_delete_method(message_id, config.BOT_TOKEN)
-
+            reqv.send_message(chat_id, response, config.BOT_TOKEN)
         else:
             resp_text = get_response_text('default.txt', "🤔")
             response = {
