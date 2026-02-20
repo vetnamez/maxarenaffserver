@@ -192,26 +192,22 @@ def webhook():
     # Вся тяжелая логика должна быть вынесена в очередь задач!
     try:
         if update_type == "bot_started":
-            resp_text = get_response_text('welcome.txt', "👋 Добро пожаловать!")
-            reqv.send_message(chat_id, config.BOT_TOKEN, reqv.load_payload('welcome_buttons.json'))
+            #resp_text = get_response_text('welcome.txt', "👋 Добро пожаловать!")
+            #reqv.send_message(chat_id, config.BOT_TOKEN, reqv.load_payload('welcome_buttons.json'))
             #resp_text = create_message_from_json('welcome_buttons.json')
+            response = reqv.load_payload('welcome_buttons.json')
         elif update_type == "message_created":
             # Простой шаблон - в реальности здесь должна быть отправка в очередь
             resp_text = f"✅ Получено: {text}, ℹ️ chat_id: {chat_id}"
+            response = {
+                "text": resp_text,
+            }
         else:
             resp_text = get_response_text('default.txt', "🤔")
-
-        response = {
-            "text": resp_text,
-            "reply_markup": {
-                "keyboard": [
-                    [{"text": "🔄 Повторить"}, {"text": "⏹ Стоп"}],
-                    [{"text": "❓ Помощь"}, {"text": "ℹ️ Инфо"}]
-                ],
-                "resize_keyboard": True,
-                "one_time_keyboard": False
+            response = {
+                "text": resp_text,
             }
-        }
+
         return jsonify(response), 200
 
     except Exception as e:
