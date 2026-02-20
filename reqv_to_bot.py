@@ -34,3 +34,26 @@ def send_message(user_id: str, token: str, payload: dict) -> requests.Response:
     except requests.exceptions.RequestException as e:
         print(f"❌ Сетевая ошибка: {e}")
     return request
+
+
+def delete_message_delete_method(message_id, token):
+    """Удаление через HTTP DELETE метод."""
+
+    url = f"{config.API_BASE_URL}messages/{message_id}"
+
+    headers = {
+        "Authorization": token,
+        "Content-Type": "application/json"
+    }
+
+
+    try:
+        response = requests.delete(url, headers=headers, timeout=10)
+
+        if not response.ok:
+            print(f"❌ Ошибка {response.status_code}: {response.text}")
+        return False
+
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Сетевая ошибка: {e}")
+        return False

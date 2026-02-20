@@ -1,3 +1,5 @@
+import token
+
 from flask import Flask, request, jsonify
 from waitress import serve
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -141,7 +143,6 @@ def create_message_from_json(json_file):
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
     """Основной webhook endpoint для MaxBot."""
-
     # GET - health check для балансировщика
     if request.method == 'GET':
         return jsonify({"status": "webhook_active"}), 200
@@ -233,10 +234,32 @@ def webhook():
             }
 
         elif update_type == "message_callback":
+            callback = data.get("callback", {})
+            pressed_button = callback.get("payload")
+            if pressed_button:
+                if pressed_button == "CITY_TGN":
+                    resp_text = "Вы выбрали Таганрог!"
+                    #print("✅ Отправлен ответ: Таганрог")
+
+                elif pressed_button == "CITY_ARM":
+                    resp_text = "Вы выбрали Армавир!"
+                    #print("✅ Отправлен ответ: Армавир")
+
+                elif pressed_button == "CITY_KZN":
+                    resp_text = "Вы выбрали Казань!"
+                    #print("✅ Отправлен ответ: Казань")
+
+                else:
+                    resp_text= f"Получен неизвестный код: {pressed_button}"
+                    #print(f"⚠ Неизвестный код кнопки: {pressed_button}")
+            else:
+
+                resp_text = "Произошла ошибка. Попробуйте ещё раз."
+
             response = {
-                "text": data,
+                "text": resp_text,
             }
-            print(data)
+            reqv.delete_message_delete_method(message_id, config.BOT_TOKEN)
 
         else:
             resp_text = get_response_text('default.txt', "🤔")

@@ -9,7 +9,7 @@ headers = {
 
 data = {
     "url": f"https://{config.MAIN_HOST}/webhook", #Адрес webhook сервера
-    "update_types": ["message_created", "bot_started", "message_callback"], #Типы событий для webhook
+    "update_types": ["message_created", "bot_started", "message_callback", "message_edited"], #Типы событий для webhook
     "secret": config.SECRET_KEY #Секретный ключ
 }
 
