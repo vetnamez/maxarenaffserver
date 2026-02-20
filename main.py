@@ -203,17 +203,17 @@ def webhook():
                                     {
                                         "type": "callback",
                                         "text": "🏙 Таганрог",
-                                        "data": "CITY_TGN"
+                                        "payload": "CITY_TGN"
                                     },
                                     {
                                         "type": "callback",
                                         "text": "🏙 Санкт-Петербург",
-                                        "data": "CITY_SPB"
+                                        "payload": "CITY_SPB"
                                     },
                                     {
                                         "type": "callback",
                                         "text": "🏙 Казань",
-                                        "data": "CITY_KZN"
+                                        "payload": "CITY_KZN"
                                     }
                                 ]
                             ]
