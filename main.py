@@ -137,23 +137,6 @@ def create_message_from_json(json_file):
     return payload
 
 # ==================== ВЕБХУК ЛОГИКА ====================
-def handle_callback(data: dict):
-    """Обрабатывает нажатие на кнопку."""
-    body = data.get("body", {})
-    sender = data.get("sender", {})
-
-    # Текст нажатой кнопки (payload)
-    callback_text = body.get("text", "")
-
-    # Логика по городам
-    if callback_text == "CITY_TGN":
-        print(f"🏙 Пользователь {sender.get('user_id')} выбрал Таганрог")
-    elif callback_text == "CITY_ARM":
-        print(f"🏙 Пользователь {sender.get('user_id')} выбрал Армавир")
-    elif callback_text == "CITY_KZN":
-        print(f"🏙 Пользователь {sender.get('user_id')} выбрал Казань")
-    else:
-        print(f"❓ Неизвестный выбор: {callback_text}")
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
