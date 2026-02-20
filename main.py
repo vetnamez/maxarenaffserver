@@ -200,21 +200,21 @@ def webhook():
                         "payload": {
                             "buttons": [
                                 [
-                                    {
+                                   [ {
                                         "type": "callback",
-                                        "text": "🏙 Таганрог",
+                                        "text": "Таганрог",
                                         "payload": "CITY_TGN"
-                                    },
-                                    {
+                                    }],
+                                    [{
                                         "type": "callback",
-                                        "text": "🏙 Санкт-Петербург",
-                                        "payload": "CITY_SPB"
-                                    },
-                                    {
+                                        "text": "Армавир",
+                                        "payload": "CITY_ARM"
+                                    }],
+                                    [{
                                         "type": "callback",
-                                        "text": "🏙 Казань",
+                                        "text": "Казань",
                                         "payload": "CITY_KZN"
-                                    }
+                                    }]
                                 ]
                             ]
                         }

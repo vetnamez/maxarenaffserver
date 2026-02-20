@@ -9,11 +9,11 @@ headers = {
 
 data = {
     "url": f"https://{config.MAIN_HOST}/webhook", #Адрес webhook сервера
-    "update_types": ["message_created", "bot_started"], #Типы событий для webhook
+    "update_types": ["message_created", "bot_started", "message_callback"], #Типы событий для webhook
     "secret": config.SECRET_KEY #Секретный ключ
 }
 
-response = requests.post(url, headers=headers, json=data)
-
-print(response.status_code)
-print(response.text)
+response1 = requests.post(url, headers=headers, json=data)
+response2 = requests.get(url, headers=headers)
+print(response1.text)
+print(response2.text)
