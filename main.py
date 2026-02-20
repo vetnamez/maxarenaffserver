@@ -192,17 +192,42 @@ def webhook():
     # Вся тяжелая логика должна быть вынесена в очередь задач!
     try:
         if update_type == "bot_started":
-            #resp_text = get_response_text('welcome.txt', "👋 Добро пожаловать!")
-            #reqv.send_message(chat_id, config.BOT_TOKEN, reqv.load_payload('welcome_buttons.json'))
-            #resp_text = create_message_from_json('welcome_buttons.json')
-            response = reqv.load_payload('welcome_buttons.json')
+            response = {
+                "text": "Добро пожаловать! Пожалуйста, выберите город:",
+                "attachments": [
+                    {
+                        "type": "inline_keyboard",
+                        "payload": {
+                            "buttons": [
+                                [
+                                    {
+                                        "type": "callback",
+                                        "text": "🏙 Таганрог",
+                                        "data": "CITY_TGN"
+                                    },
+                                    {
+                                        "type": "callback",
+                                        "text": "🏙 Санкт-Петербург",
+                                        "data": "CITY_SPB"
+                                    },
+                                    {
+                                        "type": "callback",
+                                        "text": "🏙 Казань",
+                                        "data": "CITY_KZN"
+                                    }
+                                ]
+                            ]
+                        }
+                    }
+                ]
+            }
         elif update_type == "message_created":
             # Простой шаблон - в реальности здесь должна быть отправка в очередь
-            """resp_text = f"✅ Получено: {text}, ℹ️ chat_id: {chat_id}"
+            resp_text = f"✅ Получено: {text}, ℹ️ chat_id: {chat_id}"
             response = {
                 "text": resp_text,
-            }"""
-            response = reqv.load_payload('welcome_buttons.json')
+            }
+
         else:
             resp_text = get_response_text('default.txt', "🤔")
             response = {
