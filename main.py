@@ -11,6 +11,7 @@ import hmac
 import hashlib
 import time
 from datetime import datetime
+import reqv_to_bot as reqv
 
 # ==================== НАСТРОЙКА ЛОГИРОВАНИЯ ====================
 # Создаем папку для логов
@@ -133,8 +134,8 @@ def verify_signature(payload, header_signature, secret):
 def create_message_from_json(json_file):
     with open(json_file, "r", encoding="utf-8") as f:
         payload = json.load(f)
-
     return payload
+
 # ==================== ВЕБХУК ЛОГИКА ====================
 
 @app.route('/webhook', methods=['GET', 'POST'])
@@ -191,8 +192,9 @@ def webhook():
     # Вся тяжелая логика должна быть вынесена в очередь задач!
     try:
         if update_type == "bot_started":
-            #resp_text = get_response_text('welcome.txt', "👋 Добро пожаловать!")
-            resp_text = create_message_from_json('welcome_buttons.json')
+            resp_text = get_response_text('welcome.txt', "👋 Добро пожаловать!")
+            reqv.send_message(chat_id, config.BOT_TOKEN, reqv.load_payload('welcome_buttons.json'))
+            #resp_text = create_message_from_json('welcome_buttons.json')
         elif update_type == "message_created":
             # Простой шаблон - в реальности здесь должна быть отправка в очередь
             resp_text = f"✅ Получено: {text}, ℹ️ chat_id: {chat_id}"
