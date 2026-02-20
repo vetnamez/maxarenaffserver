@@ -201,6 +201,19 @@ def webhook():
         else:
             resp_text = get_response_text('default.txt', "🤔")
 
+        response = {
+            "text": resp_text,
+            "reply_markup": {
+                "keyboard": [
+                    [{"text": "🔄 Повторить"}, {"text": "⏹ Стоп"}],
+                    [{"text": "❓ Помощь"}, {"text": "ℹ️ Инфо"}]
+                ],
+                "resize_keyboard": True,
+                "one_time_keyboard": False
+            }
+        }
+        return jsonify(response), 200
+
     except Exception as e:
         logger.exception("Error generating response")
         # Возвращаем минимальный ответ, чтобы не ломать протокол
