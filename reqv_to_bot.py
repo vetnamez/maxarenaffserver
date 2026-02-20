@@ -8,11 +8,12 @@ def load_payload(filepath: str) -> dict:
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             payload =  json.load(f)
-        return payload
+
     except FileNotFoundError:
         print(f"❌ Файл {filepath} не найден!")
     except json.JSONDecodeError as e:
         print(f"❌ Ошибка парсинга JSON: {e}")
+    return payload
 
 
 
