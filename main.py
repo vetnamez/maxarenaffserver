@@ -130,7 +130,11 @@ def verify_signature(payload, header_signature, secret):
 
     return hmac.compare_digest(expected, header_signature)
 
+def create_message_from_json(json_file):
+    with open(json_file, "r", encoding="utf-8") as f:
+        payload = json.load(f)
 
+    return payload
 # ==================== ВЕБХУК ЛОГИКА ====================
 
 @app.route('/webhook', methods=['GET', 'POST'])
@@ -187,25 +191,13 @@ def webhook():
     # Вся тяжелая логика должна быть вынесена в очередь задач!
     try:
         if update_type == "bot_started":
-            resp_text = get_response_text('welcome.txt', "👋 Добро пожаловать!")
+            #resp_text = get_response_text('welcome.txt', "👋 Добро пожаловать!")
+            resp_text = create_message_from_json('welcome_buttons.json')
         elif update_type == "message_created":
             # Простой шаблон - в реальности здесь должна быть отправка в очередь
             resp_text = f"✅ Получено: {text}, ℹ️ chat_id: {chat_id}"
         else:
             resp_text = get_response_text('default.txt', "🤔")
-
-        response = {
-            "text": resp_text,
-            "reply_markup": {
-                "keyboard": [
-                    [{"text": "🔄 Повторить"}, {"text": "⏹ Стоп"}],
-                    [{"text": "❓ Помощь"}, {"text": "ℹ️ Инфо"}]
-                ],
-                "resize_keyboard": True,
-                "one_time_keyboard": False
-            }
-        }
-        return jsonify(response), 200
 
     except Exception as e:
         logger.exception("Error generating response")
