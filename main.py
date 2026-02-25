@@ -1,9 +1,6 @@
-import token
-
 from flask import Flask, request, jsonify
 from waitress import serve
 from werkzeug.middleware.proxy_fix import ProxyFix
-import logging
 import logging.handlers
 import config
 import os
@@ -166,25 +163,42 @@ def webhook():
         return jsonify({"error": "Invalid JSON"}), 400
 
     # === 3. Идемпотентность (защита от дублей) ===
-    message_id = data.get('message', {}).get('body', {}).get('mid')
-    if message_id and is_message_processed(message_id):
-        logger.info(f"Duplicate message {message_id}, skipping")
-        return jsonify({"status": "duplicate_ignored"}), 200  # 200, чтобы отправитель не повторял
+
+      # 200, чтобы отправитель не повторял
 
     # === 4. Быстрое логирование (минимум времени) ===
     try:
-        message = data.get('message', {})
-        chat_id = message.get('recipient', {}).get('chat_id')
-        sender = message.get('sender', {}).get('name', 'Unknown')
-        text = message.get('body', {}).get('text', '')
-        update_type = data.get('update_type')
-        user_id = message.get('recipient', {}).get('user_id')
 
-        logger.info(f"Webhook [{update_type}] from {sender} (chat:{chat_id}): '{text[:100]}...'")
+        update_type = data.get('update_type')
+
+
 
         # Сохраняем в файл (асинхронно в идеале, но пока синхронно)
-        if message_id:
-            save_message_to_log(message_id, message)
+        if update_type == "message_created" or update_type == "message_callback":
+            message = data.get('message', {})
+            message_id = data.get('message', {}).get('body', {}).get('mid')
+            chat_id = message.get('recipient', {}).get('chat_id')
+            user_id = message.get('recipient', {}).get('user_id')
+            sender = message.get('sender', {}).get('name', 'Unknown')
+            text = message.get('body', {}).get('text', '')
+
+            save_message_to_log("message_" + message_id, data)
+
+        elif update_type == "bot_started":
+            chat_id = data.get('chat_id', {})
+
+            save_message_to_log("start_" + chat_id, data)
+
+        elif update_type == "bot_stopped":
+            chat_id = data.get('chat_id', {})
+
+            save_message_to_log("stop_" + chat_id, data)
+
+        else:
+            logger.info(f"Received unknown update type {update_type}")
+
+        if update_type and chat_id and data:
+            logger.info(f"Webhook [{update_type}] from chat:{chat_id}: '{data[:100]}...'")
 
     except Exception as e:
         logger.exception("Error during logging phase:"+ str(e))
@@ -271,7 +285,7 @@ def webhook():
         return jsonify(response), 200
 
     except Exception as e:
-        logger.exception("Error generating response")
+        logger.exception(f"Error generating response:{e}")
         # Возвращаем минимальный ответ, чтобы не ломать протокол
         return jsonify({"text": "⚠️ Произошла ошибка, попробуйте позже"}), 200
 
