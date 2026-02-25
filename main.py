@@ -198,7 +198,7 @@ def webhook():
             logger.info(f"Received unknown update type {update_type}")
 
         if update_type and chat_id and data:
-            logger.info(f"Webhook [{update_type}] from chat:{chat_id}: '{data[:100]}...'")
+            logger.info(f"Webhook [{update_type}] from chat:{chat_id}: '{data}...'")
 
     except Exception as e:
         logger.exception("Error during logging phase:"+ str(e))
