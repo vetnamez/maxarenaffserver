@@ -187,12 +187,12 @@ def webhook():
         elif update_type == "bot_started":
             chat_id = data.get('chat_id', {})
 
-            save_message_to_log("start_" + chat_id, data)
+            save_message_to_log(f"start_{chat_id}", data)
 
         elif update_type == "bot_stopped":
             chat_id = data.get('chat_id', {})
 
-            save_message_to_log("stop_" + chat_id, data)
+            save_message_to_log(f"stop_{chat_id}", data)
 
         else:
             logger.info(f"Received unknown update type {update_type}")
