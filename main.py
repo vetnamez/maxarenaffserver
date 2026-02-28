@@ -290,7 +290,7 @@ def webhook():
         return jsonify({"text": "⚠️ Произошла ошибка, попробуйте позже"}), 200
 
 @app.route('/webhook1', methods=['GET', 'POST'])
-def webhook():
+def webhook1():
     """Основной webhook endpoint для MaxBot."""
     # GET - health check для балансировщика
     if request.method == 'GET':
