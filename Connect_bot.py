@@ -3,12 +3,12 @@ import config
 url = config.API_BASE_URL + "subscriptions" #url MAX
 
 headers = {
-    "Authorization": config.BOT_TOKEN_SOTR, #Токен Бота
+    "Authorization": config.BOT_TOKEN_IQ, #Токен Бота
     "Content-Type": "application/json"
 }
 
 data = {
-    "url": f"https://{config.MAIN_HOST}/webhook1", #Адрес webhook сервера
+    "url": f"https://{config.MAIN_HOST}/webhook4", #Адрес webhook сервера
     "update_types": ["message_created", "bot_started", "message_callback", "bot_stopped"], #Типы событий для webhook
     "secret": config.SECRET_KEY #Секретный ключ
 }
