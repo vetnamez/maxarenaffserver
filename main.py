@@ -178,7 +178,7 @@ def webhook():
 
 
         # Сохраняем в файл (асинхронно в идеале, но пока синхронно)
-        if update_type == "message_created" or update_type == "message_callback":
+        if update_type == "message_created":
             message = data.get('message', {})
             message_id = data.get('message', {}).get('body', {}).get('mid')
             chat_id = message.get('recipient', {}).get('chat_id')
@@ -186,8 +186,15 @@ def webhook():
             sender = message.get('sender', {}).get('name', 'Unknown')
             text = message.get('body', {}).get('text', '')
 
-            save_message_to_log("message_" + message_id, data, LOGS_DIR_INVEST)
-
+            #save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_INVEST)
+            save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_INVEST)
+        
+        elif update_type == "message_callback":
+            payload = data.get('callback', {}).get('payload',{})
+            message = data.get('message', {})
+            chat_id = message.get('recipient', {}).get('chat_id')
+            save_message_to_log("payload_" + payload + "_chat_id_" + str(chat_id), data, LOGS_DIR_INVEST)
+        
         elif update_type == "bot_started":
             chat_id = data.get('chat_id', {})
 
@@ -330,7 +337,7 @@ def webhook1():
 
 
         # Сохраняем в файл (асинхронно в идеале, но пока синхронно)
-        if update_type == "message_created" or update_type == "message_callback":
+        if update_type == "message_created":
             message = data.get('message', {})
             message_id = data.get('message', {}).get('body', {}).get('mid')
             chat_id = message.get('recipient', {}).get('chat_id')
@@ -338,7 +345,13 @@ def webhook1():
             sender = message.get('sender', {}).get('name', 'Unknown')
             text = message.get('body', {}).get('text', '')
 
-            save_message_to_log("message_" + message_id, data, LOGS_DIR_SOTR)
+            save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_SOTR)
+
+        elif update_type == "message_callback":
+            payload = data.get('callback', {}).get('payload',{})
+            message = data.get('message', {})
+            chat_id = message.get('recipient', {}).get('chat_id')
+            save_message_to_log("payload_" + payload + "_chat_id_" + str(chat_id), data, LOGS_DIR_INVEST)
 
         elif update_type == "bot_started":
             chat_id = data.get('chat_id', {})
@@ -482,7 +495,7 @@ def webhook2():
 
 
         # Сохраняем в файл (асинхронно в идеале, но пока синхронно)
-        if update_type == "message_created" or update_type == "message_callback":
+        if update_type == "message_created":
             message = data.get('message', {})
             message_id = data.get('message', {}).get('body', {}).get('mid')
             chat_id = message.get('recipient', {}).get('chat_id')
@@ -490,7 +503,13 @@ def webhook2():
             sender = message.get('sender', {}).get('name', 'Unknown')
             text = message.get('body', {}).get('text', '')
 
-            save_message_to_log("message_" + message_id, data, LOGS_DIR_CHECK)
+            save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_CHECK)
+
+        elif update_type == "message_callback":
+            payload = data.get('callback', {}).get('payload',{})
+            message = data.get('message', {})
+            chat_id = message.get('recipient', {}).get('chat_id')
+            save_message_to_log("payload_" + payload + "_chat_id_" + str(chat_id), data, LOGS_DIR_INVEST)
 
         elif update_type == "bot_started":
             chat_id = data.get('chat_id', {})
@@ -634,7 +653,7 @@ def webhook3():
 
 
         # Сохраняем в файл (асинхронно в идеале, но пока синхронно)
-        if update_type == "message_created" or update_type == "message_callback":
+        if update_type == "message_created":
             message = data.get('message', {})
             message_id = data.get('message', {}).get('body', {}).get('mid')
             chat_id = message.get('recipient', {}).get('chat_id')
@@ -642,7 +661,13 @@ def webhook3():
             sender = message.get('sender', {}).get('name', 'Unknown')
             text = message.get('body', {}).get('text', '')
 
-            save_message_to_log("message_" + message_id, data, LOGS_DIR_ISP)
+            save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_ISP)
+
+        elif update_type == "message_callback":
+            payload = data.get('callback', {}).get('payload',{})
+            message = data.get('message', {})
+            chat_id = message.get('recipient', {}).get('chat_id')
+            save_message_to_log("payload_" + payload + "_chat_id_" + str(chat_id), data, LOGS_DIR_INVEST)
 
         elif update_type == "bot_started":
             chat_id = data.get('chat_id', {})
@@ -786,7 +811,7 @@ def webhook4():
 
 
         # Сохраняем в файл (асинхронно в идеале, но пока синхронно)
-        if update_type == "message_created" or update_type == "message_callback":
+        if update_type == "message_created":
             message = data.get('message', {})
             message_id = data.get('message', {}).get('body', {}).get('mid')
             chat_id = message.get('recipient', {}).get('chat_id')
@@ -794,7 +819,13 @@ def webhook4():
             sender = message.get('sender', {}).get('name', 'Unknown')
             text = message.get('body', {}).get('text', '')
 
-            save_message_to_log("message_" + message_id, data, LOGS_DIR_IQ)
+            save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_IQ)
+
+        elif update_type == "message_callback":
+            payload = data.get('callback', {}).get('payload',{})
+            message = data.get('message', {})
+            chat_id = message.get('recipient', {}).get('chat_id')
+            save_message_to_log("payload_" + payload + "_chat_id_" + str(chat_id), data, LOGS_DIR_INVEST)
 
         elif update_type == "bot_started":
             chat_id = data.get('chat_id', {})
