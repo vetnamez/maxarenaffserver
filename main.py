@@ -193,6 +193,7 @@ def webhook():
             payload = data.get('callback', {}).get('payload',{})
             message = data.get('message', {})
             message_id = data.get('message', {}).get('body', {}).get('mid')
+            user_id = message.get('recipient', {}).get('user_id')
             chat_id = message.get('recipient', {}).get('chat_id')
             save_message_to_log("payload_" + payload + "_chat_id_" + str(chat_id), data, LOGS_DIR_INVEST)
         
@@ -352,6 +353,7 @@ def webhook1():
             payload = data.get('callback', {}).get('payload',{})
             message = data.get('message', {})
             message_id = data.get('message', {}).get('body', {}).get('mid')
+            user_id = message.get('recipient', {}).get('user_id')
             chat_id = message.get('recipient', {}).get('chat_id')
             save_message_to_log("payload_" + payload + "_chat_id_" + str(chat_id), data, LOGS_DIR_INVEST)
 
@@ -511,6 +513,7 @@ def webhook2():
             payload = data.get('callback', {}).get('payload',{})
             message = data.get('message', {})
             message_id = data.get('message', {}).get('body', {}).get('mid')
+            user_id = message.get('recipient', {}).get('user_id')
             chat_id = message.get('recipient', {}).get('chat_id')
             save_message_to_log("payload_" + payload + "_chat_id_" + str(chat_id), data, LOGS_DIR_INVEST)
 
@@ -670,6 +673,7 @@ def webhook3():
             payload = data.get('callback', {}).get('payload',{})
             message = data.get('message', {})
             message_id = data.get('message', {}).get('body', {}).get('mid')
+            user_id = message.get('recipient', {}).get('user_id')
             chat_id = message.get('recipient', {}).get('chat_id')
             save_message_to_log("payload_" + payload + "_chat_id_" + str(chat_id), data, LOGS_DIR_INVEST)
 
@@ -829,6 +833,7 @@ def webhook4():
             payload = data.get('callback', {}).get('payload',{})
             message = data.get('message', {})
             message_id = data.get('message', {}).get('body', {}).get('mid')
+            user_id = message.get('recipient', {}).get('user_id')
             chat_id = message.get('recipient', {}).get('chat_id')
             save_message_to_log("payload_" + payload + "_chat_id_" + str(chat_id), data, LOGS_DIR_INVEST)
 
