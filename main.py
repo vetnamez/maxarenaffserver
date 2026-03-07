@@ -107,7 +107,7 @@ def save_message_to_log(filename, data, dir):
         safe_filename = sanitize_filename(filename)
         file_path = os.path.join(dir, f"{safe_filename}.txt")  #
 
-        with open(file_path, 'a', encoding='cp1251') as f:
+        with open(file_path, 'a', encoding='cp1251', errors='ignore') as f:
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
 
     except Exception as e:
