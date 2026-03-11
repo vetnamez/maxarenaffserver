@@ -256,11 +256,10 @@ def webhook():
 }
         elif update_type == "message_created":
             # Простой шаблон - в реальности здесь должна быть отправка в очередь
-            resp_text = f"✅ Получено: {text}, ℹ️ chat_id: {chat_id}"
+            resp_text = '' 
             response = {
                 "text": resp_text,
             }
-
         elif update_type == "message_callback":
             callback = data.get("callback", {})
             pressed_button = callback.get("payload")
@@ -278,7 +277,7 @@ def webhook():
                     #print("✅ Отправлен ответ: Казань")
 
                 else:
-                    resp_text= f"Получен неизвестный код: {pressed_button}"
+                    resp_text= ''
                     #print(f"⚠ Неизвестный код кнопки: {pressed_button}")
             else:
 
@@ -416,7 +415,7 @@ def webhook1():
 }
         elif update_type == "message_created":
             # Простой шаблон - в реальности здесь должна быть отправка в очередь
-            resp_text = f"✅ Получено: {text}, ℹ️ chat_id: {chat_id}"
+            resp_text = ''
             response = {
                 "text": resp_text,
             }
@@ -438,7 +437,7 @@ def webhook1():
                     #print("✅ Отправлен ответ: Казань")
 
                 else:
-                    resp_text= f"Получен неизвестный код: {pressed_button}"
+                    resp_text= ''
                     #print(f"⚠ Неизвестный код кнопки: {pressed_button}")
             else:
 
@@ -576,7 +575,7 @@ def webhook2():
 }
         elif update_type == "message_created":
             # Простой шаблон - в реальности здесь должна быть отправка в очередь
-            resp_text = f"✅ Получено: {text}, ℹ️ chat_id: {chat_id}"
+            resp_text = ''
             response = {
                 "text": resp_text,
             }
@@ -598,7 +597,7 @@ def webhook2():
                     #print("✅ Отправлен ответ: Казань")
 
                 else:
-                    resp_text= f"Получен неизвестный код: {pressed_button}"
+                    resp_text= ''
                     #print(f"⚠ Неизвестный код кнопки: {pressed_button}")
             else:
 
@@ -736,7 +735,7 @@ def webhook3():
 }
         elif update_type == "message_created":
             # Простой шаблон - в реальности здесь должна быть отправка в очередь
-            resp_text = f"✅ Получено: {text}, ℹ️ chat_id: {chat_id}"
+            resp_text = ''
             response = {
                 "text": resp_text,
             }
@@ -758,7 +757,7 @@ def webhook3():
                     #print("✅ Отправлен ответ: Казань")
 
                 else:
-                    resp_text= f"Получен неизвестный код: {pressed_button}"
+                    resp_text= ''
                     #print(f"⚠ Неизвестный код кнопки: {pressed_button}")
             else:
 
@@ -896,7 +895,7 @@ def webhook4():
 }
         elif update_type == "message_created":
             # Простой шаблон - в реальности здесь должна быть отправка в очередь
-            resp_text = f"✅ Получено: {text}, ℹ️ chat_id: {chat_id}"
+            resp_text = ''
             response = {
                 "text": resp_text,
             }
@@ -918,7 +917,7 @@ def webhook4():
                     #print("✅ Отправлен ответ: Казань")
 
                 else:
-                    resp_text= f"Получен неизвестный код: {pressed_button}"
+                    resp_text= ''
                     #print(f"⚠ Неизвестный код кнопки: {pressed_button}")
             else:
 
