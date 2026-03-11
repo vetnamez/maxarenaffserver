@@ -190,12 +190,14 @@ def webhook():
             save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_INVEST)
         
         elif update_type == "message_callback":
-            payload = data.get('callback', {}).get('payload',{})
+            callback = data.get('callback', {})
+            payload = callback.get('payload', {})
+            callback_id = callback.get('callback_id')
             message = data.get('message', {})
             message_id = data.get('message', {}).get('body', {}).get('mid')
             user_id = message.get('recipient', {}).get('user_id')
             chat_id = message.get('recipient', {}).get('chat_id')
-            save_message_to_log("payload_" + payload + "_chat_id_" + str(chat_id), data, LOGS_DIR_INVEST)
+            save_message_to_log("callback_id_" + callback_id + "_chat_id_" + str(chat_id), data, LOGS_DIR_INVEST)
         
         elif update_type == "bot_started":
             chat_id = data.get('chat_id', {})
@@ -263,6 +265,8 @@ def webhook():
         elif update_type == "message_callback":
             callback = data.get("callback", {})
             pressed_button = callback.get("payload")
+            callback_id = callback.get("callback_id")
+            
             if pressed_button:
                 if pressed_button == "CITY_TGN":
                     resp_text = "Вы выбрали Таганрог!"
@@ -349,12 +353,14 @@ def webhook1():
             save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_SOTR)
 
         elif update_type == "message_callback":
-            payload = data.get('callback', {}).get('payload',{})
+            callback = data.get('callback', {})
+            payload = callback.get('payload', {})
+            callback_id = callback.get('callback_id')
             message = data.get('message', {})
             message_id = data.get('message', {}).get('body', {}).get('mid')
             user_id = message.get('recipient', {}).get('user_id')
             chat_id = message.get('recipient', {}).get('chat_id')
-            save_message_to_log("payload_" + payload + "_chat_id_" + str(chat_id), data, LOGS_DIR_SOTR)
+            save_message_to_log("callback_id_" + callback_id + "_chat_id_" + str(chat_id), data, LOGS_DIR_SOTR)
 
         elif update_type == "bot_started":
             chat_id = data.get('chat_id', {})
@@ -423,6 +429,7 @@ def webhook1():
         elif update_type == "message_callback":
             callback = data.get("callback", {})
             pressed_button = callback.get("payload")
+            callback_id = callback.get("callback_id")
             if pressed_button:
                 if pressed_button == "CITY_TGN":
                     resp_text = "Вы выбрали Таганрог!"
@@ -509,12 +516,14 @@ def webhook2():
             save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_CHECK)
 
         elif update_type == "message_callback":
-            payload = data.get('callback', {}).get('payload',{})
+            callback = data.get('callback', {})
+            payload = callback.get('payload', {})
+            callback_id = callback.get('callback_id')
             message = data.get('message', {})
             message_id = data.get('message', {}).get('body', {}).get('mid')
             user_id = message.get('recipient', {}).get('user_id')
             chat_id = message.get('recipient', {}).get('chat_id')
-            save_message_to_log("payload_" + payload + "_chat_id_" + str(chat_id), data, LOGS_DIR_CHECK)
+            save_message_to_log("callback_id_" + callback_id + "_chat_id_" + str(chat_id), data, LOGS_DIR_CHECK)
 
         elif update_type == "bot_started":
             chat_id = data.get('chat_id', {})
@@ -583,6 +592,7 @@ def webhook2():
         elif update_type == "message_callback":
             callback = data.get("callback", {})
             pressed_button = callback.get("payload")
+            callback_id = callback.get("callback_id")
             if pressed_button:
                 if pressed_button == "CITY_TGN":
                     resp_text = "Вы выбрали Таганрог!"
@@ -669,12 +679,14 @@ def webhook3():
             save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_ISP)
 
         elif update_type == "message_callback":
-            payload = data.get('callback', {}).get('payload',{})
+            callback = data.get('callback', {})
+            payload = callback.get('payload', {})
+            callback_id = callback.get('callback_id')
             message = data.get('message', {})
             message_id = data.get('message', {}).get('body', {}).get('mid')
             user_id = message.get('recipient', {}).get('user_id')
             chat_id = message.get('recipient', {}).get('chat_id')
-            save_message_to_log("payload_" + payload + "_chat_id_" + str(chat_id), data, LOGS_DIR_ISP)
+            save_message_to_log("callback_id_" + callback_id + "_chat_id_" + str(chat_id), data, LOGS_DIR_ISP)
 
         elif update_type == "bot_started":
             chat_id = data.get('chat_id', {})
@@ -743,6 +755,7 @@ def webhook3():
         elif update_type == "message_callback":
             callback = data.get("callback", {})
             pressed_button = callback.get("payload")
+            callback_id = callback.get("callback_id")
             if pressed_button:
                 if pressed_button == "CITY_TGN":
                     resp_text = "Вы выбрали Таганрог!"
@@ -829,12 +842,14 @@ def webhook4():
             save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_IQ)
 
         elif update_type == "message_callback":
-            payload = data.get('callback', {}).get('payload',{})
+            callback = data.get('callback', {})
+            payload = callback.get('payload', {})
+            callback_id = callback.get('callback_id')
             message = data.get('message', {})
             message_id = data.get('message', {}).get('body', {}).get('mid')
             user_id = message.get('recipient', {}).get('user_id')
             chat_id = message.get('recipient', {}).get('chat_id')
-            save_message_to_log("payload_" + payload + "_chat_id_" + str(chat_id), data, LOGS_DIR_IQ)
+            save_message_to_log("callback_id_" + callback_id + "_chat_id_" + str(chat_id), data, LOGS_DIR_IQ)
 
         elif update_type == "bot_started":
             chat_id = data.get('chat_id', {})
@@ -903,6 +918,7 @@ def webhook4():
         elif update_type == "message_callback":
             callback = data.get("callback", {})
             pressed_button = callback.get("payload")
+            callback_id = callback.get("callback_id")
             if pressed_button:
                 if pressed_button == "CITY_TGN":
                     resp_text = "Вы выбрали Таганрог!"
