@@ -290,8 +290,8 @@ def webhook():
             response = {
                 "text": resp_text,
             }
-            reqv.delete_message_delete_method(message_id, config.BOT_TOKEN_INVEST)
-            reqv.send_message(user_id, response, config.BOT_TOKEN_INVEST)
+            #reqv.delete_message_delete_method(message_id, config.BOT_TOKEN_INVEST)
+            #reqv.send_message(user_id, response, config.BOT_TOKEN_INVEST)
         else:
             resp_text = get_response_text('default.txt', "🤔")
             response = {
@@ -453,8 +453,8 @@ def webhook1():
             response = {
                 "text": resp_text,
             }
-            reqv.delete_message_delete_method(message_id, config.BOT_TOKEN_SOTR)
-            reqv.send_message(user_id, response, config.BOT_TOKEN_SOTR)
+            #reqv.delete_message_delete_method(message_id, config.BOT_TOKEN_SOTR)
+            #reqv.send_message(user_id, response, config.BOT_TOKEN_SOTR)
         else:
             resp_text = get_response_text('default.txt', "🤔")
             response = {
@@ -616,8 +616,8 @@ def webhook2():
             response = {
                 "text": resp_text,
             }
-            reqv.delete_message_delete_method(message_id, config.BOT_TOKEN_CHECK)
-            reqv.send_message(user_id, response, config.BOT_TOKEN_CHECK)
+            #reqv.delete_message_delete_method(message_id, config.BOT_TOKEN_CHECK)
+            #reqv.send_message(user_id, response, config.BOT_TOKEN_CHECK)
         else:
             resp_text = get_response_text('default.txt', "🤔")
             response = {
@@ -779,8 +779,8 @@ def webhook3():
             response = {
                 "text": resp_text,
             }
-            reqv.delete_message_delete_method(message_id, config.BOT_TOKEN_ISP)
-            reqv.send_message(user_id, response, config.BOT_TOKEN_ISP)
+            #reqv.delete_message_delete_method(message_id, config.BOT_TOKEN_ISP)
+            #reqv.send_message(user_id, response, config.BOT_TOKEN_ISP)
         else:
             resp_text = get_response_text('default.txt', "🤔")
             response = {
@@ -942,8 +942,8 @@ def webhook4():
             response = {
                 "text": resp_text,
             }
-            reqv.delete_message_delete_method(message_id, config.BOT_TOKEN_IQ)
-            reqv.send_message(user_id, response, config.BOT_TOKEN_IQ)
+            #reqv.delete_message_delete_method(message_id, config.BOT_TOKEN_IQ)
+            #reqv.send_message(user_id, response, config.BOT_TOKEN_IQ)
         else:
             resp_text = get_response_text('default.txt', "🤔")
             response = {
