@@ -228,9 +228,9 @@ def webhook():
         elif update_type == "bot_started":
             chat_id = data.get('chat_id', {})
             user = data.get('user', {})
-            user_id = user.get('user_id', {})
+            user_id = data.get('user_id', {})
             response = reqv.hello_message
-            reqv.send_message(user_id, response, config.BOT_TOKEN_INVEST)
+            #reqv.send_message(user_id, response, config.BOT_TOKEN_INVEST)
             save_message_to_log(f"start_{chat_id}", data, LOGS_DIR_INVEST)
 
 
