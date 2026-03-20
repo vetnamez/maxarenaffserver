@@ -171,86 +171,91 @@ def webhook():
       # 200, чтобы отправитель не повторял
 
     # === 4. Быстрое логирование (минимум времени) ===
-    try:
-        response = ''
-        resp_text = ''
-        update_type = data.get('update_type')
+    except Exception as e:
+            try:
+                response = ''
+                resp_text = ''
+                update_type = data.get('update_type')
 
 
 
-        # Сохраняем в файл (асинхронно в идеале, но пока синхронно)
-        if update_type == "message_created":
-            message = data.get('message', {})
-            message_id = data.get('message', {}).get('body', {}).get('mid')
-            chat_id = message.get('recipient', {}).get('chat_id')
-            user_id = message.get('recipient', {}).get('user_id')
-            sender = message.get('sender', {}).get('name', 'Unknown')
-            text = message.get('body', {}).get('text', '')
+                # Сохраняем в файл (асинхронно в идеале, но пока синхронно)
+                if update_type == "message_created":
+                    message = data.get('message', {})
+                    message_id = data.get('message', {}).get('body', {}).get('mid')
+                    chat_id = message.get('recipient', {}).get('chat_id')
+                    user_id = message.get('recipient', {}).get('user_id')
+                    sender = message.get('sender', {}).get('name', 'Unknown')
+                    text = message.get('body', {}).get('text', '')
 
-            #save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_INVEST)
-            save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_INVEST)
-        
-        elif update_type == "message_callback":
-            callback = data.get('callback', {})
-            payload = callback.get('payload', {})
-            callback_id = callback.get('callback_id')
-            message = data.get('message', {})
-            message_id = data.get('message', {}).get('body', {}).get('mid')
-            user_id = message.get('recipient', {}).get('user_id')
-            chat_id = message.get('recipient', {}).get('chat_id')
-            save_message_to_log("callback_id_" + callback_id + "_chat_id_" + str(chat_id), data, LOGS_DIR_INVEST)
-            pressed_button = callback.get("payload")
+                    #save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_INVEST)
+                    save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_INVEST)
 
-            if pressed_button:
-                if pressed_button == "CITY_TGN":
-                    resp_text = "Вы выбрали Таганрог!"
-                    # print("✅ Отправлен ответ: Таганрог")
+                elif update_type == "message_callback":
+                    callback = data.get('callback', {})
+                    payload = callback.get('payload', {})
+                    callback_id = callback.get('callback_id')
+                    message = data.get('message', {})
+                    message_id = data.get('message', {}).get('body', {}).get('mid')
+                    user_id = message.get('recipient', {}).get('user_id')
+                    chat_id = message.get('recipient', {}).get('chat_id')
+                    save_message_to_log("callback_id_" + callback_id + "_chat_id_" + str(chat_id), data, LOGS_DIR_INVEST)
+                    pressed_button = callback.get("payload")
 
-                elif pressed_button == "CITY_ARM":
-                    resp_text = "Вы выбрали Армавир!"
-                    # print("✅ Отправлен ответ: Армавир")
+                    if pressed_button:
+                        if pressed_button == "CITY_TGN":
+                            resp_text = "Вы выбрали Таганрог!"
+                            # print("✅ Отправлен ответ: Таганрог")
 
-                elif pressed_button == "CITY_KZN":
-                    resp_text = "Вы выбрали Казань!"
-                    # print("✅ Отправлен ответ: Казань")
+                        elif pressed_button == "CITY_ARM":
+                            resp_text = "Вы выбрали Армавир!"
+                            # print("✅ Отправлен ответ: Армавир")
+
+                        elif pressed_button == "CITY_KZN":
+                            resp_text = "Вы выбрали Казань!"
+                            # print("✅ Отправлен ответ: Казань")
+
+                        else:
+                            pass
+                    else:
+
+                        resp_text = "Произошла ошибка. Попробуйте ещё раз."
+
+                    response = {
+                        "text": resp_text,
+                    }
+
+
+                elif update_type == "bot_started":
+                    chat_id = data.get('chat_id', {})
+                    user = data.get('user', {})
+                    user_id = user.get('user_id', {})
+                    response = reqv.hello_message
+                    reqv.send_message(user_id, response, config.BOT_TOKEN_INVEST)
+                    save_message_to_log(f"start_{chat_id}", data, LOGS_DIR_INVEST)
+
+
+                elif update_type == "bot_stopped":
+                    chat_id = data.get('chat_id', {})
+
+                    save_message_to_log(f"stop_{chat_id}", data, LOGS_DIR_INVEST)
 
                 else:
-                    pass
-            else:
+                    logger.info(f"Received unknown update type {update_type}")
 
-                resp_text = "Произошла ошибка. Попробуйте ещё раз."
+                if update_type and chat_id and data:
+                    logger.info(f"Webhook [{update_type}]|{data}")
 
-            response = {
-                "text": resp_text,
-            }
-
-        
-        elif update_type == "bot_started":
-            chat_id = data.get('chat_id', {})
-            user = data.get('user', {})
-            user_id = data.get('user_id', {})
-            response = reqv.hello_message
-            #reqv.send_message(user_id, response, config.BOT_TOKEN_INVEST)
-            save_message_to_log(f"start_{chat_id}", data, LOGS_DIR_INVEST)
-
-
-        elif update_type == "bot_stopped":
-            chat_id = data.get('chat_id', {})
-
-            save_message_to_log(f"stop_{chat_id}", data, LOGS_DIR_INVEST)
-
-        else:
-            logger.info(f"Received unknown update type {update_type}")
-
-        if update_type and chat_id and data:
-            logger.info(f"Webhook [{update_type}]|{data}")
+                return jsonify(response), 200
+            finally:
+                pass
 
 
 
-    except Exception as e:
-        logger.exception("Error during logging phase:"+ str(e))
+
+
         # Не прерываем обработку, если упало логирование
-    return jsonify(response), 200
+
 
     # === 5. Формирование ответа (БЫСТРО!) ===
     # Вся тяжелая логика должна быть вынесена в очередь задач!
