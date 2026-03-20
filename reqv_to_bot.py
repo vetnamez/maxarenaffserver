@@ -57,3 +57,37 @@ def delete_message_delete_method(message_id, token):
     except requests.exceptions.RequestException as e:
         print(f"❌ Сетевая ошибка: {e}")
         return False
+
+hello_message = {
+  "text": "Добро пожаловать! Пожалуйста, выберите город:",
+  "attachments": [
+    {
+      "type": "inline_keyboard",
+      "payload": {
+        "buttons": [
+          [
+            {
+              "type": "callback",
+              "text": "Таганрог",
+              "payload": "CITY_TGN"
+            }
+          ],
+          [
+            {
+              "type": "callback",
+              "text": "Армавир",
+              "payload": "CITY_ARM"
+            }
+          ],
+          [
+            {
+              "type": "callback",
+              "text": "Казань",
+              "payload": "CITY_KZN"
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

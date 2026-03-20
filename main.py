@@ -223,39 +223,9 @@ def webhook():
     # Вся тяжелая логика должна быть вынесена в очередь задач!
     try:
         if update_type == "bot_started":
-            response = {
-  "text": "Добро пожаловать! Пожалуйста, выберите город:",
-  "attachments": [
-    {
-      "type": "inline_keyboard",
-      "payload": {
-        "buttons": [
-          [
-            {
-              "type": "callback",
-              "text": "Таганрог",
-              "payload": "CITY_TGN"
-            }
-          ],
-          [
-            {
-              "type": "callback",
-              "text": "Армавир",
-              "payload": "CITY_ARM"
-            }
-          ],
-          [
-            {
-              "type": "callback",
-              "text": "Казань",
-              "payload": "CITY_KZN"
-            }
-          ]
-        ]
-      }
-    }
-  ]
-}
+            response = reqv.hello_message
+            reqv.send_message(user_id, response, config.BOT_TOKEN_INVEST)
+
         elif update_type == "message_created":
             # Простой шаблон - в реальности здесь должна быть отправка в очередь
             resp_text = '' 
