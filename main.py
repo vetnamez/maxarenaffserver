@@ -172,7 +172,8 @@ def webhook():
 
     # === 4. Быстрое логирование (минимум времени) ===
     try:
-
+        response = ''
+        resp_text = ''
         update_type = data.get('update_type')
 
 
@@ -198,11 +199,40 @@ def webhook():
             user_id = message.get('recipient', {}).get('user_id')
             chat_id = message.get('recipient', {}).get('chat_id')
             save_message_to_log("callback_id_" + callback_id + "_chat_id_" + str(chat_id), data, LOGS_DIR_INVEST)
+            pressed_button = callback.get("payload")
+
+            if pressed_button:
+                if pressed_button == "CITY_TGN":
+                    resp_text = "Вы выбрали Таганрог!"
+                    # print("✅ Отправлен ответ: Таганрог")
+
+                elif pressed_button == "CITY_ARM":
+                    resp_text = "Вы выбрали Армавир!"
+                    # print("✅ Отправлен ответ: Армавир")
+
+                elif pressed_button == "CITY_KZN":
+                    resp_text = "Вы выбрали Казань!"
+                    # print("✅ Отправлен ответ: Казань")
+
+                else:
+                    pass
+            else:
+
+                resp_text = "Произошла ошибка. Попробуйте ещё раз."
+
+            response = {
+                "text": resp_text,
+            }
+
         
         elif update_type == "bot_started":
             chat_id = data.get('chat_id', {})
-
+            user = data.get('user', {})
+            user_id = data.get('user_id', {})
+            response = reqv.hello_message
+            #reqv.send_message(user_id, response, config.BOT_TOKEN_INVEST)
             save_message_to_log(f"start_{chat_id}", data, LOGS_DIR_INVEST)
+
 
         elif update_type == "bot_stopped":
             chat_id = data.get('chat_id', {})
@@ -213,67 +243,17 @@ def webhook():
             logger.info(f"Received unknown update type {update_type}")
 
         if update_type and chat_id and data:
-            logger.info(f"Webhook [{update_type}] from chat:{chat_id}: '{data}...'")
+            logger.info(f"Webhook [{update_type}]|{data}")
+
+
 
     except Exception as e:
         logger.exception("Error during logging phase:"+ str(e))
         # Не прерываем обработку, если упало логирование
+    return jsonify(response), 200
 
     # === 5. Формирование ответа (БЫСТРО!) ===
     # Вся тяжелая логика должна быть вынесена в очередь задач!
-    try:
-        if update_type == "bot_started":
-            response = reqv.hello_message
-            reqv.send_message(user_id, response, config.BOT_TOKEN_INVEST)
-
-        elif update_type == "message_created":
-            # Простой шаблон - в реальности здесь должна быть отправка в очередь
-            resp_text = '' 
-            response = {
-                "text": resp_text,
-            }
-        elif update_type == "message_callback":
-            callback = data.get("callback", {})
-            pressed_button = callback.get("payload")
-            callback_id = callback.get("callback_id")
-            
-            if pressed_button:
-                if pressed_button == "CITY_TGN":
-                    resp_text = "Вы выбрали Таганрог!"
-                    #print("✅ Отправлен ответ: Таганрог")
-
-                elif pressed_button == "CITY_ARM":
-                    resp_text = "Вы выбрали Армавир!"
-                    #print("✅ Отправлен ответ: Армавир")
-
-                elif pressed_button == "CITY_KZN":
-                    resp_text = "Вы выбрали Казань!"
-                    #print("✅ Отправлен ответ: Казань")
-
-                else:
-                    resp_text= ''
-                    #print(f"⚠ Неизвестный код кнопки: {pressed_button}")
-            else:
-
-                resp_text = "Произошла ошибка. Попробуйте ещё раз."
-
-            response = {
-                "text": resp_text,
-            }
-            #reqv.delete_message_delete_method(message_id, config.BOT_TOKEN_INVEST)
-            #reqv.send_message(user_id, response, config.BOT_TOKEN_INVEST)
-        else:
-            resp_text = get_response_text('default.txt', "🤔")
-            response = {
-                "text": resp_text,
-            }
-
-        return jsonify(response), 200
-
-    except Exception as e:
-        logger.exception(f"Error generating response:{e}")
-        # Возвращаем минимальный ответ, чтобы не ломать протокол
-        return jsonify({"text": "⚠️ Произошла ошибка, попробуйте позже"}), 200
 
 @app.route('/webhook1', methods=['GET', 'POST'])
 def webhook1():
