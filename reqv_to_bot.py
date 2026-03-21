@@ -36,7 +36,7 @@ def send_message(user_id: str, payload: dict, token: str) -> requests.Response:
     return request
 
 
-def delete_message_delete_method(message_id, token):
+def delete_message(message_id, token):
     """Удаление через HTTP DELETE метод."""
 
     url = f"{config.API_BASE_URL}messages?message_id={message_id}"

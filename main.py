@@ -204,14 +204,17 @@ def webhook():
             if pressed_button:
                 if pressed_button == "CITY_TGN":
                     resp_text = "Вы выбрали Таганрог!"
+                    reqv.delete_message(message_id, config.BOT_TOKEN_INVEST)
                     # print("✅ Отправлен ответ: Таганрог")
 
                 elif pressed_button == "CITY_ARM":
                     resp_text = "Вы выбрали Армавир!"
+                    reqv.delete_message(message_id, config.BOT_TOKEN_INVEST)
                     # print("✅ Отправлен ответ: Армавир")
 
                 elif pressed_button == "CITY_KZN":
                     resp_text = "Вы выбрали Казань!"
+                    reqv.delete_message(message_id, config.BOT_TOKEN_INVEST)
                     # print("✅ Отправлен ответ: Казань")
 
                 else:
