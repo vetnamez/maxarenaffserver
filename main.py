@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from waitress import serve
 from werkzeug.middleware.proxy_fix import ProxyFix
 import logging.handlers
-import config
+from config import *
 import os
 import json
 import re
@@ -44,11 +44,7 @@ app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1, x_prefix=1)
 
 # ==================== КОНФИГУРАЦИЯ ====================
-LOGS_DIR_INVEST = 'chat_logs/invest'
-LOGS_DIR_SOTR = 'chat_logs/sotr'
-LOGS_DIR_CHECK = 'chat_logs/check'
-LOGS_DIR_ISP = 'chat_logs/isp'
-LOGS_DIR_IQ = 'chat_logs/iq'
+
 #os.makedirs(LOGS_DIR, exist_ok=True)
 
 # Простой in-memory кэш для идемпотентности (в продакшене лучше Redis!)
@@ -149,9 +145,9 @@ def webhook():
         return jsonify({"status": "webhook_active"}), 200
 
     # === 1. Проверка подписи (БЕЗОПАСНОСТЬ) ===
-    if config.SECRET_KEY:
+    if SECRET_KEY:
         signature = request.headers.get('X-Hub-Signature-256') or request.headers.get('X-Hub-Signature')
-        #if not verify_signature(request.data, signature, config.SECRET_KEY):
+        #if not verify_signature(request.data, signature, SECRET_KEY):
            # logger.warning(f"Invalid signature from {request.remote_addr}")
           #  return jsonify({"error": "Forbidden"}), 403
 
@@ -173,7 +169,6 @@ def webhook():
     # === 4. Быстрое логирование (минимум времени) ===
     try:
         response = ''
-        resp_text = ''
         update_type = data.get('update_type')
 
 
@@ -204,28 +199,22 @@ def webhook():
             if pressed_button:
                 if pressed_button == "CITY_TGN":
                     resp_text = "Вы выбрали Таганрог!"
-                    reqv.delete_message(message_id, config.BOT_TOKEN_INVEST)
+                    reqv.delete_message(message_id, BOT_TOKEN_INVEST)
                     # print("✅ Отправлен ответ: Таганрог")
 
                 elif pressed_button == "CITY_ARM":
                     resp_text = "Вы выбрали Армавир!"
-                    reqv.delete_message(message_id, config.BOT_TOKEN_INVEST)
+                    reqv.delete_message(message_id, BOT_TOKEN_INVEST)
                     # print("✅ Отправлен ответ: Армавир")
 
                 elif pressed_button == "CITY_KZN":
                     resp_text = "Вы выбрали Казань!"
-                    reqv.delete_message(message_id, config.BOT_TOKEN_INVEST)
+                    reqv.delete_message(message_id, BOT_TOKEN_INVEST)
                     # print("✅ Отправлен ответ: Казань")
 
                 else:
                     pass
-            else:
 
-                resp_text = "Произошла ошибка. Попробуйте ещё раз."
-
-            response = {
-                "text": resp_text,
-            }
 
         
         elif update_type == "bot_started":
@@ -233,7 +222,7 @@ def webhook():
             user = data.get('user', {})
             user_id = user.get('user_id', {})
             response = reqv.hello_message
-            reqv.send_message(user_id, response, config.BOT_TOKEN_INVEST)
+            reqv.send_message(user_id, response, BOT_TOKEN_INVEST)
             save_message_to_log(f"start_{chat_id}", data, LOGS_DIR_INVEST)
 
 
@@ -266,11 +255,11 @@ def webhook1():
         return jsonify({"status": "webhook_active"}), 200
 
     # === 1. Проверка подписи (БЕЗОПАСНОСТЬ) ===
-    if config.SECRET_KEY:
+    if SECRET_KEY:
         signature = request.headers.get('X-Hub-Signature-256') or request.headers.get('X-Hub-Signature')
-        #if not verify_signature(request.data, signature, config.SECRET_KEY):
-           # logger.warning(f"Invalid signature from {request.remote_addr}")
-          #  return jsonify({"error": "Forbidden"}), 403
+        # if not verify_signature(request.data, signature, SECRET_KEY):
+        # logger.warning(f"Invalid signature from {request.remote_addr}")
+        #  return jsonify({"error": "Forbidden"}), 403
 
     # === 2. Валидация входных данных ===
     if not request.is_json:
@@ -285,14 +274,12 @@ def webhook1():
 
     # === 3. Идемпотентность (защита от дублей) ===
 
-      # 200, чтобы отправитель не повторял
+    # 200, чтобы отправитель не повторял
 
     # === 4. Быстрое логирование (минимум времени) ===
     try:
-
+        response = ''
         update_type = data.get('update_type')
-
-
 
         # Сохраняем в файл (асинхронно в идеале, но пока синхронно)
         if update_type == "message_created":
@@ -303,6 +290,7 @@ def webhook1():
             sender = message.get('sender', {}).get('name', 'Unknown')
             text = message.get('body', {}).get('text', '')
 
+            # save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_SOTR)
             save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_SOTR)
 
         elif update_type == "message_callback":
@@ -314,11 +302,37 @@ def webhook1():
             user_id = message.get('recipient', {}).get('user_id')
             chat_id = message.get('recipient', {}).get('chat_id')
             save_message_to_log("callback_id_" + callback_id + "_chat_id_" + str(chat_id), data, LOGS_DIR_SOTR)
+            pressed_button = callback.get("payload")
+
+            if pressed_button:
+                if pressed_button == "CITY_TGN":
+                    resp_text = "Вы выбрали Таганрог!"
+                    reqv.delete_message(message_id, BOT_TOKEN_SOTR)
+                    # print("✅ Отправлен ответ: Таганрог")
+
+                elif pressed_button == "CITY_ARM":
+                    resp_text = "Вы выбрали Армавир!"
+                    reqv.delete_message(message_id, BOT_TOKEN_SOTR)
+                    # print("✅ Отправлен ответ: Армавир")
+
+                elif pressed_button == "CITY_KZN":
+                    resp_text = "Вы выбрали Казань!"
+                    reqv.delete_message(message_id, BOT_TOKEN_SOTR)
+                    # print("✅ Отправлен ответ: Казань")
+
+                else:
+                    pass
+
+
 
         elif update_type == "bot_started":
             chat_id = data.get('chat_id', {})
-
+            user = data.get('user', {})
+            user_id = user.get('user_id', {})
+            response = reqv.hello_message
+            reqv.send_message(user_id, response, BOT_TOKEN_SOTR)
             save_message_to_log(f"start_{chat_id}", data, LOGS_DIR_SOTR)
+
 
         elif update_type == "bot_stopped":
             chat_id = data.get('chat_id', {})
@@ -329,97 +343,18 @@ def webhook1():
             logger.info(f"Received unknown update type {update_type}")
 
         if update_type and chat_id and data:
-            logger.info(f"Webhook [{update_type}] from chat:{chat_id}: '{data}...'")
+            logger.info(f"Webhook [{update_type}]|{data}")
+
+
 
     except Exception as e:
-        logger.exception("Error during logging phase:"+ str(e))
+        logger.exception("Error during logging phase:" + str(e))
         # Не прерываем обработку, если упало логирование
+    return jsonify(response), 200
 
     # === 5. Формирование ответа (БЫСТРО!) ===
     # Вся тяжелая логика должна быть вынесена в очередь задач!
-    try:
-        if update_type == "bot_started":
-            response = {
-  "text": "Добро пожаловать! Пожалуйста, выберите город:",
-  "attachments": [
-    {
-      "type": "inline_keyboard",
-      "payload": {
-        "buttons": [
-          [
-            {
-              "type": "callback",
-              "text": "Таганрог",
-              "payload": "CITY_TGN"
-            }
-          ],
-          [
-            {
-              "type": "callback",
-              "text": "Армавир",
-              "payload": "CITY_ARM"
-            }
-          ],
-          [
-            {
-              "type": "callback",
-              "text": "Казань",
-              "payload": "CITY_KZN"
-            }
-          ]
-        ]
-      }
-    }
-  ]
-}
-        elif update_type == "message_created":
-            # Простой шаблон - в реальности здесь должна быть отправка в очередь
-            resp_text = ''
-            response = {
-                "text": resp_text,
-            }
 
-        elif update_type == "message_callback":
-            callback = data.get("callback", {})
-            pressed_button = callback.get("payload")
-            callback_id = callback.get("callback_id")
-            if pressed_button:
-                if pressed_button == "CITY_TGN":
-                    resp_text = "Вы выбрали Таганрог!"
-                    #print("✅ Отправлен ответ: Таганрог")
-
-                elif pressed_button == "CITY_ARM":
-                    resp_text = "Вы выбрали Армавир!"
-                    #print("✅ Отправлен ответ: Армавир")
-
-                elif pressed_button == "CITY_KZN":
-                    resp_text = "Вы выбрали Казань!"
-                    #print("✅ Отправлен ответ: Казань")
-
-                else:
-                    resp_text= ''
-                    #print(f"⚠ Неизвестный код кнопки: {pressed_button}")
-            else:
-
-                resp_text = "Произошла ошибка. Попробуйте ещё раз."
-
-            response = {
-                "text": resp_text,
-            }
-            #reqv.delete_message_delete_method(message_id, config.BOT_TOKEN_SOTR)
-            #reqv.send_message(user_id, response, config.BOT_TOKEN_SOTR)
-        else:
-            resp_text = get_response_text('default.txt', "🤔")
-            response = {
-                "text": resp_text,
-            }
-
-        return jsonify(response), 200
-
-    except Exception as e:
-        logger.exception(f"Error generating response:{e}")
-        # Возвращаем минимальный ответ, чтобы не ломать протокол
-        return jsonify({"text": "⚠️ Произошла ошибка, попробуйте позже"}), 200
 
 @app.route('/webhook2', methods=['GET', 'POST'])
 def webhook2():
@@ -429,11 +364,11 @@ def webhook2():
         return jsonify({"status": "webhook_active"}), 200
 
     # === 1. Проверка подписи (БЕЗОПАСНОСТЬ) ===
-    if config.SECRET_KEY:
+    if SECRET_KEY:
         signature = request.headers.get('X-Hub-Signature-256') or request.headers.get('X-Hub-Signature')
-        #if not verify_signature(request.data, signature, config.SECRET_KEY):
-           # logger.warning(f"Invalid signature from {request.remote_addr}")
-          #  return jsonify({"error": "Forbidden"}), 403
+        # if not verify_signature(request.data, signature, SECRET_KEY):
+        # logger.warning(f"Invalid signature from {request.remote_addr}")
+        #  return jsonify({"error": "Forbidden"}), 403
 
     # === 2. Валидация входных данных ===
     if not request.is_json:
@@ -448,14 +383,12 @@ def webhook2():
 
     # === 3. Идемпотентность (защита от дублей) ===
 
-      # 200, чтобы отправитель не повторял
+    # 200, чтобы отправитель не повторял
 
     # === 4. Быстрое логирование (минимум времени) ===
     try:
-
+        response = ''
         update_type = data.get('update_type')
-
-
 
         # Сохраняем в файл (асинхронно в идеале, но пока синхронно)
         if update_type == "message_created":
@@ -466,6 +399,7 @@ def webhook2():
             sender = message.get('sender', {}).get('name', 'Unknown')
             text = message.get('body', {}).get('text', '')
 
+            # save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_CHECK)
             save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_CHECK)
 
         elif update_type == "message_callback":
@@ -477,11 +411,37 @@ def webhook2():
             user_id = message.get('recipient', {}).get('user_id')
             chat_id = message.get('recipient', {}).get('chat_id')
             save_message_to_log("callback_id_" + callback_id + "_chat_id_" + str(chat_id), data, LOGS_DIR_CHECK)
+            pressed_button = callback.get("payload")
+
+            if pressed_button:
+                if pressed_button == "CITY_TGN":
+                    resp_text = "Вы выбрали Таганрог!"
+                    reqv.delete_message(message_id, BOT_TOKEN_CHECK)
+                    # print("✅ Отправлен ответ: Таганрог")
+
+                elif pressed_button == "CITY_ARM":
+                    resp_text = "Вы выбрали Армавир!"
+                    reqv.delete_message(message_id, BOT_TOKEN_CHECK)
+                    # print("✅ Отправлен ответ: Армавир")
+
+                elif pressed_button == "CITY_KZN":
+                    resp_text = "Вы выбрали Казань!"
+                    reqv.delete_message(message_id, BOT_TOKEN_CHECK)
+                    # print("✅ Отправлен ответ: Казань")
+
+                else:
+                    pass
+
+
 
         elif update_type == "bot_started":
             chat_id = data.get('chat_id', {})
-
+            user = data.get('user', {})
+            user_id = user.get('user_id', {})
+            response = reqv.hello_message
+            reqv.send_message(user_id, response, BOT_TOKEN_CHECK)
             save_message_to_log(f"start_{chat_id}", data, LOGS_DIR_CHECK)
+
 
         elif update_type == "bot_stopped":
             chat_id = data.get('chat_id', {})
@@ -492,97 +452,18 @@ def webhook2():
             logger.info(f"Received unknown update type {update_type}")
 
         if update_type and chat_id and data:
-            logger.info(f"Webhook [{update_type}] from chat:{chat_id}: '{data}...'")
+            logger.info(f"Webhook [{update_type}]|{data}")
+
+
 
     except Exception as e:
-        logger.exception("Error during logging phase:"+ str(e))
+        logger.exception("Error during logging phase:" + str(e))
         # Не прерываем обработку, если упало логирование
+    return jsonify(response), 200
 
     # === 5. Формирование ответа (БЫСТРО!) ===
     # Вся тяжелая логика должна быть вынесена в очередь задач!
-    try:
-        if update_type == "bot_started":
-            response = {
-  "text": "Добро пожаловать! Пожалуйста, выберите город:",
-  "attachments": [
-    {
-      "type": "inline_keyboard",
-      "payload": {
-        "buttons": [
-          [
-            {
-              "type": "callback",
-              "text": "Таганрог",
-              "payload": "CITY_TGN"
-            }
-          ],
-          [
-            {
-              "type": "callback",
-              "text": "Армавир",
-              "payload": "CITY_ARM"
-            }
-          ],
-          [
-            {
-              "type": "callback",
-              "text": "Казань",
-              "payload": "CITY_KZN"
-            }
-          ]
-        ]
-      }
-    }
-  ]
-}
-        elif update_type == "message_created":
-            # Простой шаблон - в реальности здесь должна быть отправка в очередь
-            resp_text = ''
-            response = {
-                "text": resp_text,
-            }
 
-        elif update_type == "message_callback":
-            callback = data.get("callback", {})
-            pressed_button = callback.get("payload")
-            callback_id = callback.get("callback_id")
-            if pressed_button:
-                if pressed_button == "CITY_TGN":
-                    resp_text = "Вы выбрали Таганрог!"
-                    #print("✅ Отправлен ответ: Таганрог")
-
-                elif pressed_button == "CITY_ARM":
-                    resp_text = "Вы выбрали Армавир!"
-                    #print("✅ Отправлен ответ: Армавир")
-
-                elif pressed_button == "CITY_KZN":
-                    resp_text = "Вы выбрали Казань!"
-                    #print("✅ Отправлен ответ: Казань")
-
-                else:
-                    resp_text= ''
-                    #print(f"⚠ Неизвестный код кнопки: {pressed_button}")
-            else:
-
-                resp_text = "Произошла ошибка. Попробуйте ещё раз."
-
-            response = {
-                "text": resp_text,
-            }
-            #reqv.delete_message_delete_method(message_id, config.BOT_TOKEN_CHECK)
-            #reqv.send_message(user_id, response, config.BOT_TOKEN_CHECK)
-        else:
-            resp_text = get_response_text('default.txt', "🤔")
-            response = {
-                "text": resp_text,
-            }
-
-        return jsonify(response), 200
-
-    except Exception as e:
-        logger.exception(f"Error generating response:{e}")
-        # Возвращаем минимальный ответ, чтобы не ломать протокол
-        return jsonify({"text": "⚠️ Произошла ошибка, попробуйте позже"}), 200
 
 @app.route('/webhook3', methods=['GET', 'POST'])
 def webhook3():
@@ -592,11 +473,11 @@ def webhook3():
         return jsonify({"status": "webhook_active"}), 200
 
     # === 1. Проверка подписи (БЕЗОПАСНОСТЬ) ===
-    if config.SECRET_KEY:
+    if SECRET_KEY:
         signature = request.headers.get('X-Hub-Signature-256') or request.headers.get('X-Hub-Signature')
-        #if not verify_signature(request.data, signature, config.SECRET_KEY):
-           # logger.warning(f"Invalid signature from {request.remote_addr}")
-          #  return jsonify({"error": "Forbidden"}), 403
+        # if not verify_signature(request.data, signature, SECRET_KEY):
+        # logger.warning(f"Invalid signature from {request.remote_addr}")
+        #  return jsonify({"error": "Forbidden"}), 403
 
     # === 2. Валидация входных данных ===
     if not request.is_json:
@@ -611,14 +492,12 @@ def webhook3():
 
     # === 3. Идемпотентность (защита от дублей) ===
 
-      # 200, чтобы отправитель не повторял
+    # 200, чтобы отправитель не повторял
 
     # === 4. Быстрое логирование (минимум времени) ===
     try:
-
+        response = ''
         update_type = data.get('update_type')
-
-
 
         # Сохраняем в файл (асинхронно в идеале, но пока синхронно)
         if update_type == "message_created":
@@ -629,6 +508,7 @@ def webhook3():
             sender = message.get('sender', {}).get('name', 'Unknown')
             text = message.get('body', {}).get('text', '')
 
+            # save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_ISP)
             save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_ISP)
 
         elif update_type == "message_callback":
@@ -640,11 +520,37 @@ def webhook3():
             user_id = message.get('recipient', {}).get('user_id')
             chat_id = message.get('recipient', {}).get('chat_id')
             save_message_to_log("callback_id_" + callback_id + "_chat_id_" + str(chat_id), data, LOGS_DIR_ISP)
+            pressed_button = callback.get("payload")
+
+            if pressed_button:
+                if pressed_button == "CITY_TGN":
+                    resp_text = "Вы выбрали Таганрог!"
+                    reqv.delete_message(message_id, BOT_TOKEN_ISP)
+                    # print("✅ Отправлен ответ: Таганрог")
+
+                elif pressed_button == "CITY_ARM":
+                    resp_text = "Вы выбрали Армавир!"
+                    reqv.delete_message(message_id, BOT_TOKEN_ISP)
+                    # print("✅ Отправлен ответ: Армавир")
+
+                elif pressed_button == "CITY_KZN":
+                    resp_text = "Вы выбрали Казань!"
+                    reqv.delete_message(message_id, BOT_TOKEN_ISP)
+                    # print("✅ Отправлен ответ: Казань")
+
+                else:
+                    pass
+
+
 
         elif update_type == "bot_started":
             chat_id = data.get('chat_id', {})
-
+            user = data.get('user', {})
+            user_id = user.get('user_id', {})
+            response = reqv.hello_message
+            reqv.send_message(user_id, response, BOT_TOKEN_ISP)
             save_message_to_log(f"start_{chat_id}", data, LOGS_DIR_ISP)
+
 
         elif update_type == "bot_stopped":
             chat_id = data.get('chat_id', {})
@@ -655,97 +561,18 @@ def webhook3():
             logger.info(f"Received unknown update type {update_type}")
 
         if update_type and chat_id and data:
-            logger.info(f"Webhook [{update_type}] from chat:{chat_id}: '{data}...'")
+            logger.info(f"Webhook [{update_type}]|{data}")
+
+
 
     except Exception as e:
-        logger.exception("Error during logging phase:"+ str(e))
+        logger.exception("Error during logging phase:" + str(e))
         # Не прерываем обработку, если упало логирование
+    return jsonify(response), 200
 
     # === 5. Формирование ответа (БЫСТРО!) ===
     # Вся тяжелая логика должна быть вынесена в очередь задач!
-    try:
-        if update_type == "bot_started":
-            response = {
-  "text": "Добро пожаловать! Пожалуйста, выберите город:",
-  "attachments": [
-    {
-      "type": "inline_keyboard",
-      "payload": {
-        "buttons": [
-          [
-            {
-              "type": "callback",
-              "text": "Таганрог",
-              "payload": "CITY_TGN"
-            }
-          ],
-          [
-            {
-              "type": "callback",
-              "text": "Армавир",
-              "payload": "CITY_ARM"
-            }
-          ],
-          [
-            {
-              "type": "callback",
-              "text": "Казань",
-              "payload": "CITY_KZN"
-            }
-          ]
-        ]
-      }
-    }
-  ]
-}
-        elif update_type == "message_created":
-            # Простой шаблон - в реальности здесь должна быть отправка в очередь
-            resp_text = ''
-            response = {
-                "text": resp_text,
-            }
 
-        elif update_type == "message_callback":
-            callback = data.get("callback", {})
-            pressed_button = callback.get("payload")
-            callback_id = callback.get("callback_id")
-            if pressed_button:
-                if pressed_button == "CITY_TGN":
-                    resp_text = "Вы выбрали Таганрог!"
-                    #print("✅ Отправлен ответ: Таганрог")
-
-                elif pressed_button == "CITY_ARM":
-                    resp_text = "Вы выбрали Армавир!"
-                    #print("✅ Отправлен ответ: Армавир")
-
-                elif pressed_button == "CITY_KZN":
-                    resp_text = "Вы выбрали Казань!"
-                    #print("✅ Отправлен ответ: Казань")
-
-                else:
-                    resp_text= ''
-                    #print(f"⚠ Неизвестный код кнопки: {pressed_button}")
-            else:
-
-                resp_text = "Произошла ошибка. Попробуйте ещё раз."
-
-            response = {
-                "text": resp_text,
-            }
-            #reqv.delete_message_delete_method(message_id, config.BOT_TOKEN_ISP)
-            #reqv.send_message(user_id, response, config.BOT_TOKEN_ISP)
-        else:
-            resp_text = get_response_text('default.txt', "🤔")
-            response = {
-                "text": resp_text,
-            }
-
-        return jsonify(response), 200
-
-    except Exception as e:
-        logger.exception(f"Error generating response:{e}")
-        # Возвращаем минимальный ответ, чтобы не ломать протокол
-        return jsonify({"text": "⚠️ Произошла ошибка, попробуйте позже"}), 200
 
 @app.route('/webhook4', methods=['GET', 'POST'])
 def webhook4():
@@ -755,11 +582,11 @@ def webhook4():
         return jsonify({"status": "webhook_active"}), 200
 
     # === 1. Проверка подписи (БЕЗОПАСНОСТЬ) ===
-    if config.SECRET_KEY:
+    if SECRET_KEY:
         signature = request.headers.get('X-Hub-Signature-256') or request.headers.get('X-Hub-Signature')
-        #if not verify_signature(request.data, signature, config.SECRET_KEY):
-           # logger.warning(f"Invalid signature from {request.remote_addr}")
-          #  return jsonify({"error": "Forbidden"}), 403
+        # if not verify_signature(request.data, signature, SECRET_KEY):
+        # logger.warning(f"Invalid signature from {request.remote_addr}")
+        #  return jsonify({"error": "Forbidden"}), 403
 
     # === 2. Валидация входных данных ===
     if not request.is_json:
@@ -774,14 +601,12 @@ def webhook4():
 
     # === 3. Идемпотентность (защита от дублей) ===
 
-      # 200, чтобы отправитель не повторял
+    # 200, чтобы отправитель не повторял
 
     # === 4. Быстрое логирование (минимум времени) ===
     try:
-
+        response = ''
         update_type = data.get('update_type')
-
-
 
         # Сохраняем в файл (асинхронно в идеале, но пока синхронно)
         if update_type == "message_created":
@@ -792,6 +617,7 @@ def webhook4():
             sender = message.get('sender', {}).get('name', 'Unknown')
             text = message.get('body', {}).get('text', '')
 
+            # save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_IQ)
             save_message_to_log("message_" + message_id + '_chat_id_' + str(chat_id), data, LOGS_DIR_IQ)
 
         elif update_type == "message_callback":
@@ -803,11 +629,37 @@ def webhook4():
             user_id = message.get('recipient', {}).get('user_id')
             chat_id = message.get('recipient', {}).get('chat_id')
             save_message_to_log("callback_id_" + callback_id + "_chat_id_" + str(chat_id), data, LOGS_DIR_IQ)
+            pressed_button = callback.get("payload")
+
+            if pressed_button:
+                if pressed_button == "CITY_TGN":
+                    resp_text = "Вы выбрали Таганрог!"
+                    reqv.delete_message(message_id, BOT_TOKEN_IQ)
+                    # print("✅ Отправлен ответ: Таганрог")
+
+                elif pressed_button == "CITY_ARM":
+                    resp_text = "Вы выбрали Армавир!"
+                    reqv.delete_message(message_id, BOT_TOKEN_IQ)
+                    # print("✅ Отправлен ответ: Армавир")
+
+                elif pressed_button == "CITY_KZN":
+                    resp_text = "Вы выбрали Казань!"
+                    reqv.delete_message(message_id, BOT_TOKEN_IQ)
+                    # print("✅ Отправлен ответ: Казань")
+
+                else:
+                    pass
+
+
 
         elif update_type == "bot_started":
             chat_id = data.get('chat_id', {})
-
+            user = data.get('user', {})
+            user_id = user.get('user_id', {})
+            response = reqv.hello_message
+            reqv.send_message(user_id, response, BOT_TOKEN_IQ)
             save_message_to_log(f"start_{chat_id}", data, LOGS_DIR_IQ)
+
 
         elif update_type == "bot_stopped":
             chat_id = data.get('chat_id', {})
@@ -818,98 +670,17 @@ def webhook4():
             logger.info(f"Received unknown update type {update_type}")
 
         if update_type and chat_id and data:
-            logger.info(f"Webhook [{update_type}] from chat:{chat_id}: '{data}...'")
+            logger.info(f"Webhook [{update_type}]|{data}")
+
+
 
     except Exception as e:
-        logger.exception("Error during logging phase:"+ str(e))
+        logger.exception("Error during logging phase:" + str(e))
         # Не прерываем обработку, если упало логирование
+    return jsonify(response), 200
 
     # === 5. Формирование ответа (БЫСТРО!) ===
     # Вся тяжелая логика должна быть вынесена в очередь задач!
-    try:
-        if update_type == "bot_started":
-            response = {
-  "text": "Добро пожаловать! Пожалуйста, выберите город:",
-  "attachments": [
-    {
-      "type": "inline_keyboard",
-      "payload": {
-        "buttons": [
-          [
-            {
-              "type": "callback",
-              "text": "Таганрог",
-              "payload": "CITY_TGN"
-            }
-          ],
-          [
-            {
-              "type": "callback",
-              "text": "Армавир",
-              "payload": "CITY_ARM"
-            }
-          ],
-          [
-            {
-              "type": "callback",
-              "text": "Казань",
-              "payload": "CITY_KZN"
-            }
-          ]
-        ]
-      }
-    }
-  ]
-}
-        elif update_type == "message_created":
-            # Простой шаблон - в реальности здесь должна быть отправка в очередь
-            resp_text = ''
-            response = {
-                "text": resp_text,
-            }
-
-        elif update_type == "message_callback":
-            callback = data.get("callback", {})
-            pressed_button = callback.get("payload")
-            callback_id = callback.get("callback_id")
-            if pressed_button:
-                if pressed_button == "CITY_TGN":
-                    resp_text = "Вы выбрали Таганрог!"
-                    #print("✅ Отправлен ответ: Таганрог")
-
-                elif pressed_button == "CITY_ARM":
-                    resp_text = "Вы выбрали Армавир!"
-                    #print("✅ Отправлен ответ: Армавир")
-
-                elif pressed_button == "CITY_KZN":
-                    resp_text = "Вы выбрали Казань!"
-                    #print("✅ Отправлен ответ: Казань")
-
-                else:
-                    resp_text= ''
-                    #print(f"⚠ Неизвестный код кнопки: {pressed_button}")
-            else:
-
-                resp_text = "Произошла ошибка. Попробуйте ещё раз."
-
-            response = {
-                "text": resp_text,
-            }
-            #reqv.delete_message_delete_method(message_id, config.BOT_TOKEN_IQ)
-            #reqv.send_message(user_id, response, config.BOT_TOKEN_IQ)
-        else:
-            resp_text = get_response_text('default.txt', "🤔")
-            response = {
-                "text": resp_text,
-            }
-
-        return jsonify(response), 200
-
-    except Exception as e:
-        logger.exception(f"Error generating response:{e}")
-        # Возвращаем минимальный ответ, чтобы не ломать протокол
-        return jsonify({"text": "⚠️ Произошла ошибка, попробуйте позже"}), 200
-
 
 
 @app.route('/health', methods=['GET'])
@@ -926,9 +697,9 @@ def health_check():
 
 def run_production():
     """Запуск через Waitress для продакшена."""
-    host = config.HOST  # Только localhost! SSL терминирует Nginx
-    port = config.PORT
-    threads = config.WAITRESS_THREADS
+    host = HOST  # Только localhost! SSL терминирует Nginx
+    port = PORT
+    threads = WAITRESS_THREADS
 
     logger.info(f"Starting Waitress server on {host}:{port} with {threads} threads")
     logger.info("⚠️  SSL should be handled by Nginx reverse proxy")
